@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Hardhat
+cache/
+artifacts/
+deployments/
+typechain/
+typechain-types/
+
+# Test output
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.swp
+*~
+
+# Yarn
+.yarn-integrity
+.yarn/
+
+# Secrets
+.env
+
+# Local-only deployments
+deployments/localhost/
+deployments/hardhat/
