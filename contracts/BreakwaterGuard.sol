@@ -129,19 +129,24 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         uint256 badUsdE18 = _readUsdPrice(BAD_USD_FEED);
         uint256 goodUsdE18 = _readUsdPrice(GOOD_USD_FEED);
         // USD value of one BAD token, denominated in GOOD token units.
+        // Round the safety comparison down: a value that is mathematically
+        // below the trigger must never be rounded into the healthy region.
+        uint256 healthRatioE18 = Math.mulDiv(badUsdE18, _ONE, goodUsdE18);
+
+        // Preserve the upstream pegged curve while both assets remain inside the configured safety band.
+        if (healthRatioE18 >= TRIGGER_RATIO_E18) return (updatedNextPC, 0, updatedSwap);
+
+        // tokenIn is pushed to the maker's Aqua balance. Accepting BAD_TOKEN here would increase impaired exposure.
+        if (query.tokenIn == BAD_TOKEN) revert ToxicDirectionBlocked(BAD_TOKEN);
+
+        // Once stressed, round the oracle ratio and discounted price up so
+        // neither exact-input nor exact-output execution underpays the maker.
         uint256 goodPerBadE18 = Math.mulDiv(
             badUsdE18,
             _ONE,
             goodUsdE18,
             Math.Rounding.Ceil
         );
-
-        // Preserve the upstream pegged curve while both assets remain inside the configured safety band.
-        if (goodPerBadE18 >= TRIGGER_RATIO_E18) return (updatedNextPC, 0, updatedSwap);
-
-        // tokenIn is pushed to the maker's Aqua balance. Accepting BAD_TOKEN here would increase impaired exposure.
-        if (query.tokenIn == BAD_TOKEN) revert ToxicDirectionBlocked(BAD_TOKEN);
-
         uint256 unwindPriceE18 = Math.mulDiv(
             goodPerBadE18,
             _BPS - UNWIND_DISCOUNT_BPS,

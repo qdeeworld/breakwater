@@ -47,6 +47,10 @@ interface FixtureConfig {
   curveGood?: bigint;
   shipBad?: bigint;
   shipGood?: bigint;
+  badFeedDecimals?: number;
+  goodFeedDecimals?: number;
+  badFeedAnswer?: bigint;
+  goodFeedAnswer?: bigint;
 }
 
 async function setupFixtureForOrdering(
@@ -74,8 +78,14 @@ async function setupFixtureForOrdering(
   const bad = badIsLower ? tokenA : tokenB;
   const good = badIsLower ? tokenB : tokenA;
 
-  const badFeed = await deployContract("MockPriceFeed", [8, FEED_ONE]) as unknown as MockPriceFeed;
-  const goodFeed = await deployContract("MockPriceFeed", [8, FEED_ONE]) as unknown as MockPriceFeed;
+  const badFeed = await deployContract("MockPriceFeed", [
+    config.badFeedDecimals ?? 8,
+    config.badFeedAnswer ?? FEED_ONE
+  ]) as unknown as MockPriceFeed;
+  const goodFeed = await deployContract("MockPriceFeed", [
+    config.goodFeedDecimals ?? 8,
+    config.goodFeedAnswer ?? FEED_ONE
+  ]) as unknown as MockPriceFeed;
   const guard = await deployContract("BreakwaterGuard", [
     await router.getAddress(),
     await bad.getAddress(),
@@ -145,6 +155,15 @@ async function setupBadHighFixture(): Promise<Fixture> {
 
 async function setupImbalancedFixture(): Promise<Fixture> {
   return setupFixtureForOrdering(true, { shipBad: ether("100"), shipGood: ether("1") });
+}
+
+async function setupSubTriggerRoundingFixture(): Promise<Fixture> {
+  return setupFixtureForOrdering(true, {
+    badFeedDecimals: 18,
+    goodFeedDecimals: 18,
+    badFeedAnswer: 980_000_000_000_000_000n,
+    goodFeedAnswer: 1_000_000_000_000_000_001n
+  });
 }
 
 function traits(taker: string, isAToB: boolean, isExactIn = true, threshold?: bigint): string {
@@ -365,6 +384,46 @@ describe("BreakwaterAMM", function () {
     expect(after.balance).to.equal(before.balance - desiredBadOut);
   });
 
+  it("rejects an exact-output exit above the remaining impaired-token balance", async function () {
+    const {
+      accounts: { maker, taker },
+      tokens: { bad, good },
+      feeds: { bad: badFeed },
+      contracts: { aqua, router, guard },
+      directions,
+      order,
+      orderHash
+    } = await loadFixture(setupFixture);
+    await badFeed.setAnswer(FEED_DEPEG);
+
+    const makerAddress = await maker.getAddress();
+    const routerAddress = await router.getAddress();
+    const badAddress = await bad.getAddress();
+    const goodAddress = await good.getAddress();
+    const badBefore = await aqua.rawBalances(makerAddress, routerAddress, orderHash, badAddress);
+    const goodBefore = await aqua.rawBalances(makerAddress, routerAddress, orderHash, goodAddress);
+    const requested = badBefore.balance + 1n;
+    const exitTraits = traits(
+      await taker.getAddress(),
+      directions.exitIsAToB,
+      false,
+      ethers.MaxUint256
+    );
+
+    await expect(router.connect(taker).quote.staticCall(order, requested, exitTraits))
+      .to.be.revertedWithCustomError(guard, "InsufficientBadTokenLiquidity")
+      .withArgs(requested, badBefore.balance);
+    await good.connect(taker).approve(routerAddress, ethers.MaxUint256);
+    await expect(router.connect(taker).swap(order, requested, exitTraits))
+      .to.be.revertedWithCustomError(guard, "InsufficientBadTokenLiquidity")
+      .withArgs(requested, badBefore.balance);
+
+    const badAfter = await aqua.rawBalances(makerAddress, routerAddress, orderHash, badAddress);
+    const goodAfter = await aqua.rawBalances(makerAddress, routerAddress, orderHash, goodAddress);
+    expect(badAfter.balance).to.equal(badBefore.balance);
+    expect(goodAfter.balance).to.equal(goodBefore.balance);
+  });
+
   it("treats the trigger boundary as healthy and the first lower feed tick as stressed", async function () {
     const {
       accounts: { taker },
@@ -383,6 +442,21 @@ describe("BreakwaterAMM", function () {
     await badFeed.setAnswer(97_999_999);
     await expect(router.connect(taker).quote.staticCall(order, amountIn, toxicTraits))
       .to.be.revertedWithCustomError(guard, "ToxicDirectionBlocked");
+  });
+
+  it("never rounds a mathematically sub-trigger ratio into the healthy region", async function () {
+    const {
+      accounts: { taker },
+      contracts: { router, guard },
+      directions,
+      order
+    } = await loadFixture(setupSubTriggerRoundingFixture);
+
+    await expect(router.connect(taker).quote.staticCall(
+      order,
+      ether("10"),
+      traits(await taker.getAddress(), directions.toxicIsAToB)
+    )).to.be.revertedWithCustomError(guard, "ToxicDirectionBlocked");
   });
 
   it("rechecks the feed at execution when a healthy quote becomes stressed", async function () {
@@ -422,6 +496,95 @@ describe("BreakwaterAMM", function () {
     expect(after.balance).to.equal(before.balance);
   });
 
+  it("rolls back when the maker's physical allowance no longer backs the virtual balance", async function () {
+    const {
+      accounts: { maker, taker },
+      tokens: { bad, good },
+      feeds: { bad: badFeed },
+      contracts: { aqua, router },
+      directions,
+      order,
+      orderHash
+    } = await loadFixture(setupFixture);
+    await badFeed.setAnswer(FEED_DEPEG);
+
+    const makerAddress = await maker.getAddress();
+    const takerAddress = await taker.getAddress();
+    const routerAddress = await router.getAddress();
+    const aquaAddress = await aqua.getAddress();
+    const badAddress = await bad.getAddress();
+    const goodAddress = await good.getAddress();
+    const amountIn = ether("10");
+    const exitTraits = traits(takerAddress, directions.exitIsAToB);
+    const quote = await router.connect(taker).quote.staticCall(order, amountIn, exitTraits);
+
+    await bad.connect(maker).approve(aquaAddress, quote.amountOut - 1n);
+    const secondQuote = await router.connect(taker).quote.staticCall(order, amountIn, exitTraits);
+    expect(secondQuote.amountOut).to.equal(quote.amountOut);
+
+    const virtualBadBefore = await aqua.rawBalances(makerAddress, routerAddress, orderHash, badAddress);
+    const virtualGoodBefore = await aqua.rawBalances(makerAddress, routerAddress, orderHash, goodAddress);
+    const physicalBefore = {
+      makerBad: await bad.balanceOf(makerAddress),
+      makerGood: await good.balanceOf(makerAddress),
+      takerBad: await bad.balanceOf(takerAddress),
+      takerGood: await good.balanceOf(takerAddress)
+    };
+
+    await good.connect(taker).approve(routerAddress, amountIn);
+    await expect(router.connect(taker).swap(order, amountIn, exitTraits))
+      .to.be.revertedWithCustomError(aqua, "SafeTransferFromFailed");
+
+    const virtualBadAfter = await aqua.rawBalances(makerAddress, routerAddress, orderHash, badAddress);
+    const virtualGoodAfter = await aqua.rawBalances(makerAddress, routerAddress, orderHash, goodAddress);
+    expect(virtualBadAfter.balance).to.equal(virtualBadBefore.balance);
+    expect(virtualGoodAfter.balance).to.equal(virtualGoodBefore.balance);
+    expect(await bad.balanceOf(makerAddress)).to.equal(physicalBefore.makerBad);
+    expect(await good.balanceOf(makerAddress)).to.equal(physicalBefore.makerGood);
+    expect(await bad.balanceOf(takerAddress)).to.equal(physicalBefore.takerBad);
+    expect(await good.balanceOf(takerAddress)).to.equal(physicalBefore.takerGood);
+  });
+
+  it("authenticates its VM caller and validates the encoded instruction length", async function () {
+    const {
+      accounts: { maker, taker },
+      tokens: { bad, good },
+      contracts: { router, guard }
+    } = await loadFixture(setupFixture);
+    const takerAddress = await taker.getAddress();
+    const routerAddress = await router.getAddress();
+    const query = {
+      orderHash: ethers.ZeroHash,
+      maker: await maker.getAddress(),
+      taker: takerAddress,
+      tokenIn: await good.getAddress(),
+      tokenOut: await bad.getAddress(),
+      isExactIn: true
+    };
+    const registers = {
+      balanceIn: ether("100"),
+      balanceOut: ether("100"),
+      amountIn: ether("10"),
+      amountOut: 0,
+      amountNetPulled: 0
+    };
+
+    await expect(guard.connect(taker).extruction(false, 0, query, registers, "0x00a2", "0x"))
+      .to.be.revertedWithCustomError(guard, "UnauthorizedCaller")
+      .withArgs(takerAddress);
+
+    await ethers.provider.send("hardhat_impersonateAccount", [routerAddress]);
+    await ethers.provider.send("hardhat_setBalance", [routerAddress, ethers.toBeHex(ONE)]);
+    const routerSigner = await ethers.getSigner(routerAddress);
+    await expect(guard.connect(routerSigner).extruction(false, 0, query, registers, "0x00", "0x"))
+      .to.be.revertedWithCustomError(guard, "InvalidInstructionArgsLength")
+      .withArgs(1);
+    await expect(guard.connect(routerSigner).extruction(false, 0, query, registers, "0x00a1", "0x"))
+      .to.be.revertedWithCustomError(guard, "InvalidPeggedInstructionLength")
+      .withArgs(161);
+    await ethers.provider.send("hardhat_stopImpersonatingAccount", [routerAddress]);
+  });
+
   it("fails closed on stale or invalid oracle data", async function () {
     const {
       accounts: { taker },
@@ -444,6 +607,17 @@ describe("BreakwaterAMM", function () {
     await badFeed.setRoundData(4, FEED_DEPEG, now, now, 3);
     await expect(router.connect(taker).quote.staticCall(order, ether("10"), exitTraits))
       .to.be.revertedWithCustomError(guard, "InvalidFeedRound");
+
+    const future = now + MAX_STALENESS;
+    await badFeed.setRoundData(5, FEED_DEPEG, future, future, 5);
+    const callTimestamp = await time.latest();
+    await expect(router.connect(taker).quote.staticCall(order, ether("10"), exitTraits))
+      .to.be.revertedWithCustomError(guard, "FeedTimestampInFuture")
+      .withArgs(await badFeed.getAddress(), future, callTimestamp);
+
+    await badFeed.setRoundData(6, FEED_DEPEG, now, now - 1, 6);
+    await expect(router.connect(taker).quote.staticCall(order, ether("10"), exitTraits))
+      .to.be.revertedWithCustomError(guard, "InvalidFeedTimestamp");
   });
 
   it("fails closed when the reference feed is stale", async function () {
