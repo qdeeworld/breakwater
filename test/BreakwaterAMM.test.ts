@@ -278,8 +278,9 @@ describe("BreakwaterAMM", function () {
     const amountIn = ether("10");
     const badUsdE18 = FEED_DEPEG * 10n ** 10n;
     const goodUsdE18 = 102_000_000n * 10n ** 10n;
-    const goodPerBad = badUsdE18 * ONE / goodUsdE18;
-    const effectiveExitPrice = goodPerBad * (10_000n - BigInt(UNWIND_DISCOUNT_BPS)) / 10_000n;
+    const goodPerBad = (badUsdE18 * ONE + goodUsdE18 - 1n) / goodUsdE18;
+    const discountFactor = 10_000n - BigInt(UNWIND_DISCOUNT_BPS);
+    const effectiveExitPrice = (goodPerBad * discountFactor + 9_999n) / 10_000n;
     const expectedBadOut = amountIn * ONE / effectiveExitPrice;
 
     const quote = await router.connect(taker).quote.staticCall(

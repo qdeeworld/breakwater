@@ -20,6 +20,7 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
     uint256 private constant _ONE = 1e18;
     uint256 private constant _BPS = 10_000;
     uint8 private constant _MAX_DECIMALS = 18;
+    uint16 private constant _PEGGED_INSTRUCTION_LENGTH = 162;
 
     address public immutable SWAP_VM;
     address public immutable BAD_TOKEN;
@@ -41,6 +42,7 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
     error UnsupportedFeedDecimals(address feed, uint8 decimals);
     error UnauthorizedCaller(address caller);
     error InvalidInstructionArgsLength(uint256 length);
+    error InvalidPeggedInstructionLength(uint256 length);
     error InvalidPair(address tokenIn, address tokenOut);
     error InvalidFeedRound(address feed, uint80 roundId, uint80 answeredInRound);
     error InvalidFeedAnswer(address feed, int256 answer);
@@ -110,6 +112,10 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
     ) {
         if (msg.sender != SWAP_VM) revert UnauthorizedCaller(msg.sender);
         if (args.length != 2) revert InvalidInstructionArgsLength(args.length);
+        uint16 peggedInstructionLength = uint16(bytes2(args));
+        if (peggedInstructionLength != _PEGGED_INSTRUCTION_LENGTH) {
+            revert InvalidPeggedInstructionLength(peggedInstructionLength);
+        }
         if (
             !(
                 (query.tokenIn == BAD_TOKEN && query.tokenOut == GOOD_TOKEN)
@@ -123,7 +129,12 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         uint256 badUsdE18 = _readUsdPrice(BAD_USD_FEED);
         uint256 goodUsdE18 = _readUsdPrice(GOOD_USD_FEED);
         // USD value of one BAD token, denominated in GOOD token units.
-        uint256 goodPerBadE18 = Math.mulDiv(badUsdE18, _ONE, goodUsdE18);
+        uint256 goodPerBadE18 = Math.mulDiv(
+            badUsdE18,
+            _ONE,
+            goodUsdE18,
+            Math.Rounding.Ceil
+        );
 
         // Preserve the upstream pegged curve while both assets remain inside the configured safety band.
         if (goodPerBadE18 >= TRIGGER_RATIO_E18) return (updatedNextPC, 0, updatedSwap);
@@ -134,7 +145,8 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         uint256 unwindPriceE18 = Math.mulDiv(
             goodPerBadE18,
             _BPS - UNWIND_DISCOUNT_BPS,
-            _BPS
+            _BPS,
+            Math.Rounding.Ceil
         );
         if (unwindPriceE18 == 0) revert ZeroUnwindPrice();
 
@@ -166,7 +178,7 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         // The guard precedes PeggedSwap. In stress it has produced the complete
         // oracle-priced quote, so skip the pegged instruction rather than let
         // that curve reject a valid exposure-reducing exit at an imbalanced state.
-        updatedNextPC += uint16(bytes2(args));
+        updatedNextPC += peggedInstructionLength;
 
         return (updatedNextPC, 0, updatedSwap);
     }
