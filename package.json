@@ -1,8 +1,8 @@
 {
-  "name": "swap-vm-template",
+  "name": "breakwater",
   "version": "0.0.1",
-  "description": "",
-  "author": "Degensoft Ltd.",
+  "description": "Aqua liquidity that stops buying the depeg",
+  "author": "Breakwater contributors",
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "precompile": "mkdir -p node_modules/forge-std && rsync -a node_modules/forge-std/src/ node_modules/forge-std/",
