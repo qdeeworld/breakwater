@@ -9,7 +9,7 @@ a fixed post-kickoff Ethereum state. The same trade runs against both an
 exact-tag local deployment and 1inch's canonical Ethereum Aqua/SwapVM v1.0.2
 contracts.
 
-- Breakwater commit under test: `999d992`
+- Breakwater commit under test: `833ceb9`
 - Aqua dependency: v1.0.0 commit `81c26e4619ce21556ab02b3284ee2685de21fb18`
 - SwapVM dependency: v1.0.2 commit `32c687c2b73101fc26549e48fa1ff8a4d73afbac`
 - Ethereum block: `25905465`
@@ -28,7 +28,7 @@ MAINNET_FORK_BLOCK=25905465 \
 npx -y yarn@1.22.22 test:fork
 ```
 
-Result on 2026-09-04 after the v1.0.2 migration: `2 passing (4s)`.
+Result on 2026-09-04 after oracle-observation hardening: `2 passing (20s)`.
 
 ## Fixed external state
 
@@ -51,8 +51,10 @@ assuming a one-hour update cadence.
 
 - Input: `10,000,000` USDT units (10 USDT)
 - Quote/output: `9,997,505` USDC units (9.997505 USDC)
-- Exact-tag self-deployed router fork transaction: `0xdecc55847b1b9b202fcbb4fb91c88cb1eb5f6c869ea2038e0270774968d77208`
-- Canonical v1.0.2 router fork transaction: `0x2e62df16fcc643de75d384350e24e3757e3d6492bd2c9bbfe6578a46e2ae3ec2`
+- Exact-tag self-deployed router oracle commitment: `0xdf686f39498c1fe3266a6a087868f57101ed13ac7c5f36566a3f15fcf81245fa`
+- Exact-tag self-deployed router fork transaction: `0x32c02a7ea3c1d4cccf088993870b7b680b00775cbbf5864190e9a68ef3f3cab7`
+- Canonical v1.0.2 router oracle commitment: `0x8e1c45ec6b7be56d0dfe728efb9d995d5e5f28e1ede9142bc5f643e8aae65e22`
+- Canonical v1.0.2 router fork transaction: `0x006be831e898ff133425838b1254cbce72d6788c6f99b614d43b44d01abe8814`
 - Aqua USDC virtual balance: `100,000,000` -> `90,002,495`
 - Aqua USDT virtual balance: `100,000,000` -> `110,000,000`
 
@@ -61,7 +63,8 @@ not discoverable on a mainnet explorer. The canonical run calls the deployed
 Aqua and router bytecode, but the Breakwater contracts, shipped position, and
 transaction exist only in fork state. The test impersonates an existing holder
 only inside the fork; no real holder approved Breakwater and no real assets
-moved.
+moved. The two commitments differ intentionally because each is domain-separated
+by its BreakwaterGuard address.
 
 ## What remains simulated
 
