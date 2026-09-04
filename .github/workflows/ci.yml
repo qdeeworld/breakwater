@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install pinned dependencies
+        run: npx -y yarn@1.22.22 install --frozen-lockfile
+      - name: Compile
+        run: npx -y yarn@1.22.22 build
+      - name: Test
+        run: npx -y yarn@1.22.22 test
