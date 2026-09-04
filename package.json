@@ -8,6 +8,7 @@
     "precompile": "mkdir -p node_modules/forge-std && rsync -a node_modules/forge-std/src/ node_modules/forge-std/",
     "build": "npm run precompile && hardhat compile",
     "test": "npm run precompile && hardhat test",
+    "test:fork": "npm run precompile && hardhat test test/BreakwaterMainnetFork.test.ts",
     "deploy": "hardhat deploy --network",
     "deploy:localhost": "hardhat deploy --network localhost",
     "clean": "rimraf artifacts cache coverage contracts/hardhat-dependency-compiler deployments typechain-types"

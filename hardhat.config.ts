@@ -10,8 +10,17 @@ import { HardhatUserConfig } from 'hardhat/config';
 
 dotenv.config();
 
+const mainnetForkUrl = process.env.MAINNET_RPC_URL;
+const mainnetForkBlock = Number(process.env.MAINNET_FORK_BLOCK ?? "25905465");
+
 const config: HardhatUserConfig = {
   networks: {
+    hardhat: mainnetForkUrl ? {
+      forking: {
+        url: mainnetForkUrl,
+        blockNumber: mainnetForkBlock,
+      },
+    } : {},
     localhost: {
       url: "http://127.0.0.1:8545",
     },
