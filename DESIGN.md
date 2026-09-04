@@ -69,7 +69,7 @@ Never communicate route availability by color alone. Pair state color with a pla
 
 ## Layout and spacing
 
-The first viewport begins with a compact identity row, network and wallet status, then the live position state. On desktop, use a seven-column live-position region beside a five-column trade ticket. On mobile, stack the status and tide gate above the trade ticket so the permitted direction and next action appear early.
+The first viewport begins with a compact identity row, network and wallet status, then the live position state. On desktop, use a seven-column live-position region beside a five-column trade ticket. On mobile, place the trade ticket immediately after the state summary and follow it with the full tide gate, keeping the signing path ahead of secondary telemetry.
 
 Use the 4px spacing unit. Common gaps are 8px for tightly related readings, 16px inside controls, 24px between component groups, and 32px between major sections. Working surfaces have 4px corners, 1px rules, and little or no drop shadow.
 

@@ -12,6 +12,7 @@ dotenv.config();
 
 const mainnetForkUrl = process.env.MAINNET_RPC_URL;
 const mainnetForkBlock = Number(process.env.MAINNET_FORK_BLOCK ?? "25905465");
+const sepoliaPrivateKey = process.env.PRIVATE_KEY?.replace(/^0x/, "");
 
 const config: HardhatUserConfig = {
   networks: {
@@ -25,8 +26,9 @@ const config: HardhatUserConfig = {
       url: "http://127.0.0.1:8545",
     },
     sepolia: {
+      chainId: 11155111,
       url: process.env.SEPOLIA_RPC_URL || "",
-      accounts: process.env.PRIVATE_KEY ? ["0x" + process.env.PRIVATE_KEY] : [],
+      accounts: sepoliaPrivateKey ? ["0x" + sepoliaPrivateKey] : [],
     },
     // Add your deployment network here and the corresponding URL in the .env file
   },

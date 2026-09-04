@@ -10,6 +10,8 @@
     "test": "npm run precompile && hardhat test",
     "test:fork": "npm run precompile && hardhat test test/BreakwaterMainnetFork.test.ts",
     "deploy": "hardhat deploy --network",
+    "deploy:public:local": "hardhat deploy --network hardhat --tags BreakwaterPublic",
+    "deploy:public:sepolia": "hardhat deploy --network sepolia --tags BreakwaterPublic",
     "deploy:localhost": "hardhat deploy --network localhost",
     "clean": "rimraf artifacts cache coverage contracts/hardhat-dependency-compiler deployments typechain-types"
   },

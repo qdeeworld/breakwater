@@ -13,9 +13,10 @@ at a bounded oracle-derived price.
 
 ## Status
 
-Breakwater is in its bounded ETHOnline 2026 sponsor spike. Project-specific work
-began after the official kickoff at `2026-09-04T16:00:00Z`; this repository was
-initialized at `2026-09-04T17:04:11Z`.
+Breakwater passed its bounded ETHOnline 2026 sponsor spike and is now
+commissioning the public taker journey. Project-specific work began after the
+official kickoff at `2026-09-04T16:00:00Z`; this repository was initialized at
+`2026-09-04T17:04:11Z`.
 
 The spike must prove:
 
@@ -26,8 +27,9 @@ The spike must prove:
 5. the Aqua virtual-balance invariant across both token orderings; and
 6. deterministic stale/invalid-feed and quote-to-execution behavior.
 
-If those claims do not reproduce, Breakwater does not advance to the heavy
-build.
+Those claims reproduce in the local suite and on the pinned Ethereum fork. The
+remaining launch gate is a cold completion of the public quote → approve → swap
+journey.
 
 ## Primary target
 
@@ -58,6 +60,24 @@ npx -y yarn@1.22.22 test:fork
 The captured block, feed rounds, quote, and Aqua balance deltas are recorded in
 [`evidence/mainnet-fork-2026-09-04.md`](evidence/mainnet-fork-2026-09-04.md).
 
+The taker console lives in [`web`](web). It deliberately shows an offline
+commissioning state until a real deployment manifest is committed:
+
+```sh
+cd web
+npm install
+npm run dev
+```
+
+Its production dependency audit, lint, and build can be reproduced with:
+
+```sh
+cd web
+npm audit --omit=dev
+npm run lint
+npm run build
+```
+
 ## Taker safety contract
 
 Before requesting the final executable quote, a taker must read
@@ -76,12 +96,30 @@ deployment, operators must still verify each distinct proxy's network, asset/USD
 denomination, heartbeat, and decimals against the oracle publisher's canonical
 registry; AggregatorV3 cannot prove those semantics to the guard itself.
 
-The current spike has no claimed Breakwater public-network deployment. Local
-tests deploy the complete stack. The pinned fork additionally calls canonical
-Ethereum Aqua and AquaSwapVMRouter contracts, while Breakwater's contracts and
-transactions remain ephemeral fork state. Public-network deployment
-instructions will be added with the first supported-network release rather
-than implying that fork-only addresses are live contracts.
+No Breakwater public-network deployment is claimed yet. Local tests deploy the
+complete stack, including the same immutable stressed demo market used by the
+public journey. The pinned fork additionally calls canonical Ethereum Aqua and
+AquaSwapVMRouter contracts, while Breakwater's contracts and transactions
+remain ephemeral fork state.
+
+Once an event-only deployer is configured with Sepolia ETH, the dedicated
+public-market script self-deploys the exact pinned Aqua/SwapVM stack, immutable
+testnet-only price observations, two demo tokens, the guard, and a funded Aqua
+position. The reserve token faucet permits one 1,000-token claim per address and
+has a hard 100,000-token global issuance cap, so public claims cannot exhaust
+the 1,000,000-token unwind reserve. The maker retains a 200,000-token buffer;
+rerunning the deploy task restores any depleted active Aqua balance with
+`Aqua.push` without mutating the strategy.
+
+The task emits `BREAKWATER_PUBLIC_MANIFEST` in the exact JSON shape consumed by
+[`web/lib/breakwater-deployment.json`](web/lib/breakwater-deployment.json), plus
+a separate transaction-rich evidence record:
+
+```sh
+cp .env.example .env
+# Fill PRIVATE_KEY and SEPOLIA_RPC_URL locally; never commit .env.
+npm run deploy:public:sepolia
+```
 
 ## Provenance
 
