@@ -19,6 +19,8 @@ const USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7";
 const USDC_USD_FEED = "0x8fffffd4afb6115b954bd326cbe7b4ba576818f6";
 const USDT_USD_FEED = "0x3e7d1eab13ad0104d2750b8863b489d65364e32d";
 const FORK_MAKER = "0xf977814e90da44bfa03b6295a0616a897441acec";
+const CANONICAL_AQUA = "0x1111113ccf1426a8e30e2bff5e005d929bf6a90a";
+const CANONICAL_ROUTER = "0x111111338c5091e8440b67b168bae16a668ac0de";
 const SIX_DECIMAL_UNIT = 10n ** 6n;
 const RATE_6_TO_18 = 10n ** 12n;
 const TWO_DAYS = 172_800;
@@ -37,11 +39,24 @@ const aggregatorAbi = [
 ];
 
 const describeFork = process.env.MAINNET_RPC_URL ? describe : describe.skip;
+type RouterMode = "self-deployed-v1.0.2" | "canonical-v1.0.2";
 
 describeFork("Breakwater mainnet fork", function () {
-  it("ships and swaps real 6-decimal stablecoins using live Chainlink feeds", async function () {
+  const forkBlock = Number(process.env.MAINNET_FORK_BLOCK ?? DEFAULT_FORK_BLOCK);
+  let pristineSnapshot: string;
+
+  before(async function () {
+    expect(await ethers.provider.getBlockNumber()).to.equal(forkBlock);
+    pristineSnapshot = await ethers.provider.send("evm_snapshot", []);
+  });
+
+  beforeEach(async function () {
+    await ethers.provider.send("evm_revert", [pristineSnapshot]);
+    pristineSnapshot = await ethers.provider.send("evm_snapshot", []);
+  });
+
+  async function runForkProof(routerMode: RouterMode): Promise<void> {
     const [owner, taker] = await ethers.getSigners();
-    const forkBlock = Number(process.env.MAINNET_FORK_BLOCK ?? DEFAULT_FORK_BLOCK);
     expect(await ethers.provider.getBlockNumber()).to.equal(forkBlock);
     await ethers.provider.send("hardhat_impersonateAccount", [FORK_MAKER]);
     await ethers.provider.send("hardhat_setBalance", [FORK_MAKER, "0x56BC75E2D63100000"]);
@@ -58,18 +73,29 @@ describeFork("Breakwater mainnet fork", function () {
     const usdcRound = await usdcFeed.latestRoundData();
     const usdtRound = await usdtFeed.latestRoundData();
 
-    const aqua = await deployContract("Aqua") as unknown as Aqua;
-    const weth = await deployContract("WETHMock") as unknown as WETHMock;
-    const router = await deployContract("AquaSwapVMRouter", [
-      await aqua.getAddress(),
-      await weth.getAddress(),
-      await owner.getAddress(),
-      "Breakwater SwapVM",
-      "1.0.0"
-    ]) as unknown as AquaSwapVMRouter;
-    const amm = await deployContract("BreakwaterAMM", [await aqua.getAddress()]) as unknown as BreakwaterAMM;
+    let aqua: Aqua;
+    let router: AquaSwapVMRouter;
+    if (routerMode === "canonical-v1.0.2") {
+      aqua = await ethers.getContractAt("Aqua", CANONICAL_AQUA) as unknown as Aqua;
+      router = await ethers.getContractAt("AquaSwapVMRouter", CANONICAL_ROUTER) as unknown as AquaSwapVMRouter;
+      expect((await router.AQUA()).toLowerCase()).to.equal(CANONICAL_AQUA);
+    } else {
+      aqua = await deployContract("Aqua") as unknown as Aqua;
+      const weth = await deployContract("WETHMock") as unknown as WETHMock;
+      router = await deployContract("AquaSwapVMRouter", [
+        await aqua.getAddress(),
+        await weth.getAddress(),
+        await owner.getAddress(),
+        "Breakwater SwapVM",
+        "1.0.2"
+      ]) as unknown as AquaSwapVMRouter;
+    }
+
+    const aquaAddress = await aqua.getAddress();
+    const routerAddress = await router.getAddress();
+    const amm = await deployContract("BreakwaterAMM", [aquaAddress]) as unknown as BreakwaterAMM;
     const guard = await deployContract("BreakwaterGuard", [
-      await router.getAddress(),
+      routerAddress,
       USDC,
       USDT,
       USDC_USD_FEED,
@@ -94,9 +120,11 @@ describeFork("Breakwater mainnet fork", function () {
       0
     );
     const order = { maker: built.maker, traits: built.traits, data: built.data };
-    const routerAddress = await router.getAddress();
-    const aquaAddress = await aqua.getAddress();
 
+    // Reset first because this whale may already have a non-zero USDT allowance
+    // for canonical Aqua at the pinned historical block.
+    await usdc.connect(maker).approve(aquaAddress, 0);
+    await usdt.connect(maker).approve(aquaAddress, 0);
     await usdc.connect(maker).approve(aquaAddress, ethers.MaxUint256);
     await usdt.connect(maker).approve(aquaAddress, ethers.MaxUint256);
     await aqua.connect(maker).ship(
@@ -115,17 +143,28 @@ describeFork("Breakwater mainnet fork", function () {
     const takerData = TakerTraitsLib.build({
       taker: await taker.getAddress(),
       isExactIn: true,
-      isAToB: false,
       useTransferFromAndAquaPush: true
     });
 
-    const quote = await router.connect(taker).quote.staticCall(order, amountIn, takerData);
+    const quote = await router.connect(taker).quote.staticCall(
+      order,
+      USDT,
+      USDC,
+      amountIn,
+      takerData
+    );
     expect(quote.amountOut).to.be.gt(0);
     const orderHash = await router.hash(order);
     const badBefore = await aqua.rawBalances(FORK_MAKER, routerAddress, orderHash, USDC);
     const goodBefore = await aqua.rawBalances(FORK_MAKER, routerAddress, orderHash, USDT);
 
-    const swapTx = await router.connect(taker).swap(order, amountIn, takerData);
+    const swapTx = await router.connect(taker).swap(
+      order,
+      USDT,
+      USDC,
+      amountIn,
+      takerData
+    );
     await expect(swapTx).to.emit(router, "Swapped");
     const swapReceipt = await swapTx.wait();
 
@@ -135,7 +174,10 @@ describeFork("Breakwater mainnet fork", function () {
     expect(goodAfter.balance).to.equal(goodBefore.balance + amountIn);
 
     console.log("FORK_EVIDENCE", JSON.stringify({
+      routerMode,
       forkBlock,
+      aqua: aquaAddress,
+      router: routerAddress,
       swapTransaction: swapReceipt?.hash,
       usdcFeed: {
         address: USDC_USD_FEED,
@@ -158,5 +200,13 @@ describeFork("Breakwater mainnet fork", function () {
         usdtAfter: goodAfter.balance.toString()
       }
     }));
+  }
+
+  it("ships and swaps through a self-deployed exact v1.0.2 router", async function () {
+    await runForkProof("self-deployed-v1.0.2");
+  });
+
+  it("ships and swaps through the canonical Ethereum v1.0.2 router", async function () {
+    await runForkProof("canonical-v1.0.2");
   });
 });

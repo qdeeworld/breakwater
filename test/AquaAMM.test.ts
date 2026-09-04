@@ -80,8 +80,6 @@ describe("AquaAMM", function () {
 
     const order = await aquaAMM.buildProgram(
       await maker.getAddress(),
-      await tokenA.getAddress(),
-      await tokenB.getAddress(),
       feeBpsIn,
       sqrtPriceMin,
       sqrtPriceMax,
@@ -130,20 +128,20 @@ describe("AquaAMM", function () {
       // Ship liquidity to Aqua
       await shipLiquidity(aqua, maker, swapVM, orderStruct, tokenA, tokenB, ether("100"), ether("200"));
 
-      // Build taker traits data: swap tokenB -> tokenA (isAToB = false)
+      // Build taker traits data; direction is explicit in the v1.0.2 router call.
       const takerData = TakerTraitsLib.build({
         taker: await mockTaker.getAddress(),
         isExactIn: true,
-        isAToB: false,
         threshold: ether("15"),
-        hasPreTransferInCallback: true,
-        preTransferInCallbackData: "0x" // Empty callback data
+        hasPreTransferInCallback: true
       });
 
       const amountIn = ether("50");
 
       const tx = await mockTaker.swap(
         orderStruct,
+        await tokenB.getAddress(),
+        await tokenA.getAddress(),
         amountIn,
         takerData
       );
@@ -166,11 +164,10 @@ describe("AquaAMM", function () {
 
       await shipLiquidity(aqua, maker, swapVM, orderStruct, tokenA, tokenB, ether("100"), ether("200"));
 
-      // Swap tokenB -> tokenA (isAToB = false)
+      // Swap tokenB -> tokenA.
       const takerData = TakerTraitsLib.build({
         taker: await taker.getAddress(),
         isExactIn: true,
-        isAToB: false,
         threshold: ether("15"),
         useTransferFromAndAquaPush: true
       });
@@ -181,6 +178,8 @@ describe("AquaAMM", function () {
 
       const tx = await swapVM.connect(taker).swap(
         orderStruct,
+        await tokenB.getAddress(),
+        await tokenA.getAddress(),
         amountIn,
         takerData
       );
@@ -207,7 +206,6 @@ describe("AquaAMM", function () {
       const takerData = TakerTraitsLib.build({
         taker: await taker.getAddress(),
         isExactIn: true,
-        isAToB: false,
         threshold: ether("15"),
         useTransferFromAndAquaPush: true
       });
@@ -219,6 +217,8 @@ describe("AquaAMM", function () {
       await timeIncreaseTo(await time.latest() + 86401);
       await expect(swapVM.connect(taker).swap(
         orderStruct,
+        await tokenB.getAddress(),
+        await tokenA.getAddress(),
         amountIn,
         takerData
       )).to.be.revertedWithCustomError(aquaAMM, 'DeadlineReached');

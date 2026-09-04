@@ -99,11 +99,16 @@ describe("Breakwater mixed token decimals", function () {
     const takerData = TakerTraitsLib.build({
       taker: takerAddress,
       isExactIn: true,
-      isAToB: !badIsLower,
       useTransferFromAndAquaPush: true
     });
 
-    const quote = await router.connect(taker).quote.staticCall(order, amountIn, takerData);
+    const quote = await router.connect(taker).quote.staticCall(
+      order,
+      goodAddress,
+      badAddress,
+      amountIn,
+      takerData
+    );
     expect(quote.amountIn).to.equal(amountIn);
     expect(quote.amountOut).to.equal(expectedBadOut);
     expect(goodPerBadE18).to.equal(921_568_627_450_980_393n);
@@ -116,7 +121,8 @@ describe("Breakwater mixed token decimals", function () {
     const makerBadBefore = await bad.balanceOf(makerAddress);
     const takerBadBefore = await bad.balanceOf(takerAddress);
     await good.connect(taker).approve(routerAddress, amountIn);
-    await expect(router.connect(taker).swap(order, amountIn, takerData)).to.emit(router, "Swapped");
+    await expect(router.connect(taker).swap(order, goodAddress, badAddress, amountIn, takerData))
+      .to.emit(router, "Swapped");
     const badAfter = await aqua.rawBalances(makerAddress, routerAddress, orderHash, badAddress);
     const goodAfter = await aqua.rawBalances(makerAddress, routerAddress, orderHash, goodAddress);
 
@@ -133,14 +139,25 @@ describe("Breakwater mixed token decimals", function () {
     const exactOutData = TakerTraitsLib.build({
       taker: takerAddress,
       isExactIn: false,
-      isAToB: !badIsLower,
       threshold: expectedGoodIn,
       useTransferFromAndAquaPush: true
     });
-    const exactOutQuote = await router.connect(taker).quote.staticCall(order, desiredBadOut, exactOutData);
+    const exactOutQuote = await router.connect(taker).quote.staticCall(
+      order,
+      goodAddress,
+      badAddress,
+      desiredBadOut,
+      exactOutData
+    );
     expect(exactOutQuote.amountOut).to.equal(desiredBadOut);
     expect(exactOutQuote.amountIn).to.equal(9_169_607_843_137_254_920n);
     await good.connect(taker).approve(routerAddress, exactOutQuote.amountIn);
-    await expect(router.connect(taker).swap(order, desiredBadOut, exactOutData)).to.emit(router, "Swapped");
+    await expect(router.connect(taker).swap(
+      order,
+      goodAddress,
+      badAddress,
+      desiredBadOut,
+      exactOutData
+    )).to.emit(router, "Swapped");
   });
 });

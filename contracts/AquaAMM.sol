@@ -23,8 +23,6 @@ contract AquaAMM is AquaOpcodes {
 
     /// @notice Builds an AMM order for the given token pair
     /// @param maker Liquidity provider address
-    /// @param tokenA First token of the pair (sorted automatically if needed)
-    /// @param tokenB Second token of the pair (sorted automatically if needed)
     /// @param feeBpsIn Trading fee on input amount in bps (1e9 = 100%)
     /// @param sqrtPriceMin sqrt(P_min) in 1e18 fixed-point, where P = tokenGt/tokenLt (0 = full range)
     /// @param sqrtPriceMax sqrt(P_max) in 1e18 fixed-point, where P = tokenGt/tokenLt (0 = full range)
@@ -35,8 +33,6 @@ contract AquaAMM is AquaOpcodes {
     /// @param deadline Order expiration timestamp (0 = no deadline)
     function buildProgram(
         address maker,
-        address tokenA,
-        address tokenB,
         uint32 feeBpsIn,
         uint256 sqrtPriceMin,
         uint256 sqrtPriceMax,
@@ -47,8 +43,6 @@ contract AquaAMM is AquaOpcodes {
         uint40 deadline
     ) external pure returns (ISwapVM.Order memory) {
         require(protocolFeeBpsIn <= feeBpsIn, ProtocolFeesExceedMakerFees(protocolFeeBpsIn, feeBpsIn));
-        if (tokenA > tokenB) (tokenA, tokenB) = (tokenB, tokenA);
-
         Program memory program = ProgramBuilder.init(_opcodes());
         bool isConcentrated = sqrtPriceMin != 0 || sqrtPriceMax != 0;
         bytes memory bytecode = bytes.concat(
@@ -65,8 +59,6 @@ contract AquaAMM is AquaOpcodes {
         return MakerTraitsLib.build(MakerTraitsLib.Args({
             maker: maker,
             receiver: address(0),
-            tokenA: tokenA,
-            tokenB: tokenB,
             shouldUnwrapWeth: false,
             useAquaInsteadOfSignature: true,
             allowZeroAmountIn: false,

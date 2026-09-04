@@ -27,11 +27,15 @@ contract MockTaker is ITakerCallbacks, Ownable {
 
     function swap(
         ISwapVM.Order calldata order,
+        address tokenIn,
+        address tokenOut,
         uint256 amount,
         bytes calldata takerTraitsAndData
     ) external onlyOwner returns (uint256 amountIn, uint256 amountOut) {
         (amountIn, amountOut,) = swapVM.swap(
             order,
+            tokenIn,
+            tokenOut,
             amount,
             takerTraitsAndData
         );

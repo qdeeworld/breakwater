@@ -14,9 +14,9 @@
     "clean": "rimraf artifacts cache coverage contracts/hardhat-dependency-compiler deployments typechain-types"
   },
   "dependencies": {
-    "@1inch/aqua": "https://github.com/1inch/aqua#6f05aa1ac2dcf701b0e086ad5e7606515f1fa454",
+    "@1inch/aqua": "https://github.com/1inch/aqua#81c26e4619ce21556ab02b3284ee2685de21fb18",
     "@1inch/solidity-utils": "6.9.7",
-    "@1inch/swap-vm": "https://github.com/1inch/swap-vm#b44977a1c7744c9caa6b7974d9b638ed4983cfd3",
+    "@1inch/swap-vm": "https://github.com/1inch/swap-vm#32c687c2b73101fc26549e48fa1ff8a4d73afbac",
     "@openzeppelin/contracts": "5.4.0"
   },
   "devDependencies": {
@@ -25,6 +25,7 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.14",
+    "@1inch/swap-vm-sdk": "0.4.1",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.5",
@@ -40,11 +41,12 @@
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "viem": "2.56.3"
   },
   "resolutions":{
     "elliptic": "6.6.1",
-    "@1inch/aqua": "https://github.com/1inch/aqua#6f05aa1ac2dcf701b0e086ad5e7606515f1fa454",
+    "@1inch/aqua": "https://github.com/1inch/aqua#81c26e4619ce21556ab02b3284ee2685de21fb18",
     "@1inch/solidity-utils": "6.9.7",
     "@openzeppelin/contracts": "5.4.0"
   }

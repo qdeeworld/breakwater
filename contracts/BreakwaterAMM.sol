@@ -77,8 +77,6 @@ contract BreakwaterAMM is AquaOpcodes {
         return MakerTraitsLib.build(MakerTraitsLib.Args({
             maker: maker,
             receiver: address(0),
-            tokenA: tokenA,
-            tokenB: tokenB,
             shouldUnwrapWeth: false,
             useAquaInsteadOfSignature: true,
             allowZeroAmountIn: false,
