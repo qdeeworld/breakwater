@@ -44,6 +44,18 @@ npx -y yarn@1.22.22 build
 npx -y yarn@1.22.22 test
 ```
 
+An optional pinned Ethereum-fork test exercises real USDC, USDT, and Chainlink
+feed contracts without broadcasting a transaction:
+
+```sh
+MAINNET_RPC_URL=<ethereum-rpc-url> \
+MAINNET_FORK_BLOCK=25905465 \
+npx -y yarn@1.22.22 test:fork
+```
+
+The captured block, feed rounds, quote, and Aqua balance deltas are recorded in
+[`evidence/mainnet-fork-2026-09-04.md`](evidence/mainnet-fork-2026-09-04.md).
+
 The current spike has no claimed public-network deployment. The test fixture
 deploys Aqua, the AquaSwapVMRouter, Breakwater contracts, price feeds, tokens,
 and shipped positions to a clean local Hardhat chain before exercising real
