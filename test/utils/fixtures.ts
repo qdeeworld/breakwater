@@ -36,7 +36,7 @@ async function deployFixture() {
     await weth.getAddress(),
     await owner.getAddress(),
     "AquaSwapVM",
-    "1.0.0"
+    "1.0.2"
   ]) as unknown as AquaSwapVMRouter;
 
   console.log("AquaSwapVMRouter deployed at:", await swapVM.getAddress());

@@ -61,7 +61,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     wethAddress,
     deployer, // owner (can rescue funds)
     'AquaSwapVM',
-    '1.0.0'
+    '1.0.2'
   ];
   const aquaSwapVMRouterDeploy = await deploy('AquaSwapVMRouter', {
     from: deployer,

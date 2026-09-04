@@ -58,6 +58,24 @@ npx -y yarn@1.22.22 test:fork
 The captured block, feed rounds, quote, and Aqua balance deltas are recorded in
 [`evidence/mainnet-fork-2026-09-04.md`](evidence/mainnet-fork-2026-09-04.md).
 
+## Taker safety contract
+
+Before requesting the final executable quote, a taker must read
+`BreakwaterGuard.currentOracleCommitment()` and place that 32-byte value first
+in the official SDK's `TakerTraits.instructionsArgs`. The exact encoded traits
+used for that final quote must be reused for execution. If either complete feed
+observation changes, execution reverts and the taker must fetch a new
+commitment and requote.
+
+The oracle commitment prevents a stale quote from executing against a new
+oracle round. It does not replace the SDK's minimum-output/maximum-input
+threshold or deadline; production takers should set all three controls.
+
+The constructor rejects one feed address being reused for both assets. Before
+deployment, operators must still verify each distinct proxy's network, asset/USD
+denomination, heartbeat, and decimals against the oracle publisher's canonical
+registry; AggregatorV3 cannot prove those semantics to the guard itself.
+
 The current spike has no claimed Breakwater public-network deployment. Local
 tests deploy the complete stack. The pinned fork additionally calls canonical
 Ethereum Aqua and AquaSwapVMRouter contracts, while Breakwater's contracts and

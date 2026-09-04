@@ -42,6 +42,7 @@ const describeFork = process.env.MAINNET_RPC_URL ? describe : describe.skip;
 type RouterMode = "self-deployed-v1.0.2" | "canonical-v1.0.2";
 
 describeFork("Breakwater mainnet fork", function () {
+  this.timeout(120_000);
   const forkBlock = Number(process.env.MAINNET_FORK_BLOCK ?? DEFAULT_FORK_BLOCK);
   let pristineSnapshot: string;
 
@@ -143,7 +144,8 @@ describeFork("Breakwater mainnet fork", function () {
     const takerData = TakerTraitsLib.build({
       taker: await taker.getAddress(),
       isExactIn: true,
-      useTransferFromAndAquaPush: true
+      useTransferFromAndAquaPush: true,
+      instructionsArgs: await guard.currentOracleCommitment()
     });
 
     const quote = await router.connect(taker).quote.staticCall(
@@ -178,6 +180,7 @@ describeFork("Breakwater mainnet fork", function () {
       forkBlock,
       aqua: aquaAddress,
       router: routerAddress,
+      oracleCommitment: await guard.currentOracleCommitment(),
       swapTransaction: swapReceipt?.hash,
       usdcFeed: {
         address: USDC_USD_FEED,

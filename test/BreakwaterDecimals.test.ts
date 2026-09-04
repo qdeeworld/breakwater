@@ -34,7 +34,7 @@ describe("Breakwater mixed token decimals", function () {
       await weth.getAddress(),
       await owner.getAddress(),
       "Breakwater SwapVM",
-      "1.0.0"
+      "1.0.2"
     ]) as unknown as AquaSwapVMRouter;
     const amm = await deployContract("BreakwaterAMM", [await aqua.getAddress()]) as unknown as BreakwaterAMM;
     const bad = await deployContract("MockToken", ["Six Decimal Bad", "BAD6", 6]) as unknown as MockToken;
@@ -99,7 +99,8 @@ describe("Breakwater mixed token decimals", function () {
     const takerData = TakerTraitsLib.build({
       taker: takerAddress,
       isExactIn: true,
-      useTransferFromAndAquaPush: true
+      useTransferFromAndAquaPush: true,
+      instructionsArgs: await guard.currentOracleCommitment()
     });
 
     const quote = await router.connect(taker).quote.staticCall(
@@ -140,7 +141,8 @@ describe("Breakwater mixed token decimals", function () {
       taker: takerAddress,
       isExactIn: false,
       threshold: expectedGoodIn,
-      useTransferFromAndAquaPush: true
+      useTransferFromAndAquaPush: true,
+      instructionsArgs: await guard.currentOracleCommitment()
     });
     const exactOutQuote = await router.connect(taker).quote.staticCall(
       order,

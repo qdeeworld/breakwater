@@ -21,6 +21,10 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
     uint256 private constant _BPS = 10_000;
     uint8 private constant _MAX_DECIMALS = 18;
     uint16 private constant _PEGGED_INSTRUCTION_LENGTH = 162;
+    uint256 private constant _ORACLE_COMMITMENT_LENGTH = 32;
+    bytes32 private constant _ORACLE_COMMITMENT_TYPEHASH = keccak256(
+        "BreakwaterOracleCommitmentV1(uint256 chainId,address guard,bytes32 badObservationHash,bytes32 goodObservationHash)"
+    );
 
     address public immutable SWAP_VM;
     address public immutable BAD_TOKEN;
@@ -35,6 +39,7 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
 
     error ZeroAddress();
     error IdenticalTokens();
+    error IdenticalFeeds();
     error InvalidMaxStaleness();
     error InvalidTriggerRatio(uint256 ratio);
     error InvalidDiscount(uint256 discountBps);
@@ -44,6 +49,9 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
     error InvalidInstructionArgsLength(uint256 length);
     error InvalidPeggedInstructionLength(uint256 length);
     error InvalidPair(address tokenIn, address tokenOut);
+    error BreakwaterRecomputeDetected(uint256 amountIn, uint256 amountOut);
+    error MissingOracleCommitment(uint256 availableLength);
+    error OracleCommitmentMismatch(bytes32 supplied, bytes32 current);
     error InvalidFeedRound(address feed, uint80 roundId, uint80 answeredInRound);
     error InvalidFeedAnswer(address feed, int256 answer);
     error InvalidFeedTimestamp(address feed, uint256 startedAt, uint256 updatedAt);
@@ -69,6 +77,7 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
                 || address(badUsdFeed) == address(0) || address(goodUsdFeed) == address(0)
         ) revert ZeroAddress();
         if (badToken == goodToken) revert IdenticalTokens();
+        if (address(badUsdFeed) == address(goodUsdFeed)) revert IdenticalFeeds();
         if (maxStaleness == 0) revert InvalidMaxStaleness();
         if (triggerRatioE18 == 0 || triggerRatioE18 > _ONE) {
             revert InvalidTriggerRatio(triggerRatioE18);
@@ -104,7 +113,7 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         SwapQuery calldata query,
         SwapRegisters calldata swap,
         bytes calldata args,
-        bytes calldata
+        bytes calldata takerData
     ) external view override(IExtruction, IStaticExtruction) returns (
         uint256 updatedNextPC,
         uint256 choppedLength,
@@ -122,19 +131,36 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
                     || (query.tokenIn == GOOD_TOKEN && query.tokenOut == BAD_TOKEN)
             )
         ) revert InvalidPair(query.tokenIn, query.tokenOut);
+        if (
+            (query.isExactIn && swap.amountOut != 0)
+                || (!query.isExactIn && swap.amountIn != 0)
+        ) revert BreakwaterRecomputeDetected(swap.amountIn, swap.amountOut);
+        if (takerData.length < _ORACLE_COMMITMENT_LENGTH) {
+            revert MissingOracleCommitment(takerData.length);
+        }
 
         updatedNextPC = nextPC;
+        choppedLength = _ORACLE_COMMITMENT_LENGTH;
         updatedSwap = swap;
 
-        uint256 badUsdE18 = _readUsdPrice(BAD_USD_FEED);
-        uint256 goodUsdE18 = _readUsdPrice(GOOD_USD_FEED);
+        (
+            uint256 badUsdE18,
+            uint256 goodUsdE18,
+            bytes32 currentCommitment
+        ) = _readOracleState();
+        bytes32 suppliedCommitment = bytes32(takerData[:_ORACLE_COMMITMENT_LENGTH]);
+        if (suppliedCommitment != currentCommitment) {
+            revert OracleCommitmentMismatch(suppliedCommitment, currentCommitment);
+        }
         // USD value of one BAD token, denominated in GOOD token units.
         // Round the safety comparison down: a value that is mathematically
         // below the trigger must never be rounded into the healthy region.
         uint256 healthRatioE18 = Math.mulDiv(badUsdE18, _ONE, goodUsdE18);
 
         // Preserve the upstream pegged curve while both assets remain inside the configured safety band.
-        if (healthRatioE18 >= TRIGGER_RATIO_E18) return (updatedNextPC, 0, updatedSwap);
+        if (healthRatioE18 >= TRIGGER_RATIO_E18) {
+            return (updatedNextPC, choppedLength, updatedSwap);
+        }
 
         // tokenIn is pushed to the maker's Aqua balance. Accepting BAD_TOKEN here would increase impaired exposure.
         if (query.tokenIn == BAD_TOKEN) revert ToxicDirectionBlocked(BAD_TOKEN);
@@ -185,10 +211,39 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         // that curve reject a valid exposure-reducing exit at an imbalanced state.
         updatedNextPC += peggedInstructionLength;
 
-        return (updatedNextPC, 0, updatedSwap);
+        return (updatedNextPC, choppedLength, updatedSwap);
     }
 
-    function _readUsdPrice(IPriceOracle feed) private view returns (uint256 priceE18) {
+    /// @notice Returns the commitment takers must place at the front of SwapVM
+    ///         instruction arguments before requesting a quote.
+    /// @dev A feed update between quote and swap makes the old commitment fail
+    ///      closed. The taker must fetch a new commitment and requote.
+    function currentOracleCommitment() external view returns (bytes32 commitment) {
+        (,, commitment) = _readOracleState();
+    }
+
+    function _readOracleState() private view returns (
+        uint256 badUsdE18,
+        uint256 goodUsdE18,
+        bytes32 commitment
+    ) {
+        bytes32 badObservationHash;
+        bytes32 goodObservationHash;
+        (badUsdE18, badObservationHash) = _readUsdPrice(BAD_USD_FEED);
+        (goodUsdE18, goodObservationHash) = _readUsdPrice(GOOD_USD_FEED);
+        commitment = keccak256(abi.encode(
+            _ORACLE_COMMITMENT_TYPEHASH,
+            block.chainid,
+            address(this),
+            badObservationHash,
+            goodObservationHash
+        ));
+    }
+
+    function _readUsdPrice(IPriceOracle feed) private view returns (
+        uint256 priceE18,
+        bytes32 observationHash
+    ) {
         uint8 feedDecimals = feed.decimals();
         if (feedDecimals > _MAX_DECIMALS) {
             revert UnsupportedFeedDecimals(address(feed), feedDecimals);
@@ -217,5 +272,14 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         }
 
         priceE18 = uint256(answer) * (10 ** (_MAX_DECIMALS - feedDecimals));
+        observationHash = keccak256(abi.encode(
+            address(feed),
+            feedDecimals,
+            roundId,
+            answer,
+            startedAt,
+            updatedAt,
+            answeredInRound
+        ));
     }
 }

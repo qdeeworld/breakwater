@@ -66,7 +66,7 @@ async function setupFixtureForOrdering(
     await weth.getAddress(),
     await owner.getAddress(),
     "Breakwater SwapVM",
-    "1.0.0"
+    "1.0.2"
   ]) as unknown as AquaSwapVMRouter;
   const amm = await deployContract("BreakwaterAMM", [await aqua.getAddress()]) as unknown as BreakwaterAMM;
 
@@ -166,12 +166,19 @@ async function setupSubTriggerRoundingFixture(): Promise<Fixture> {
   });
 }
 
-function traits(taker: string, _legacyDirection: boolean, isExactIn = true, threshold?: bigint): string {
+async function traits(
+  guard: BreakwaterGuard,
+  taker: string,
+  _legacyDirection: boolean,
+  isExactIn = true,
+  threshold?: bigint
+): Promise<string> {
   return TakerTraitsLib.build({
     taker,
     isExactIn,
     threshold,
-    useTransferFromAndAquaPush: true
+    useTransferFromAndAquaPush: true,
+    instructionsArgs: await guard.currentOracleCommitment()
   });
 }
 
@@ -180,14 +187,14 @@ describe("BreakwaterAMM", function () {
     const {
       accounts: { taker },
       tokens: { bad, good },
-      contracts: { router },
+      contracts: { router, guard },
       directions,
       order
     } = await loadFixture(setupFixture);
     const takerAddress = await taker.getAddress();
 
-    const badToGood = traits(takerAddress, directions.toxicIsAToB);
-    const goodToBad = traits(takerAddress, directions.exitIsAToB);
+    const badToGood = await traits(guard, takerAddress, directions.toxicIsAToB);
+    const goodToBad = await traits(guard, takerAddress, directions.exitIsAToB);
     const amountIn = ether("10");
 
     const firstQuote = await router.connect(taker).quote.staticCall(
@@ -238,7 +245,7 @@ describe("BreakwaterAMM", function () {
     await badFeed.setAnswer(FEED_DEPEG);
 
     const takerAddress = await taker.getAddress();
-    const toxicTraits = traits(takerAddress, directions.toxicIsAToB);
+    const toxicTraits = await traits(guard, takerAddress, directions.toxicIsAToB);
     const amountIn = ether("10");
     const before = await aqua.rawBalances(
       await maker.getAddress(),
@@ -282,7 +289,7 @@ describe("BreakwaterAMM", function () {
       accounts: { maker, taker },
       tokens: { bad, good },
       feeds: { bad: badFeed },
-      contracts: { aqua, router },
+      contracts: { aqua, router, guard },
       directions,
       order,
       orderHash
@@ -290,7 +297,7 @@ describe("BreakwaterAMM", function () {
     await badFeed.setAnswer(FEED_DEPEG);
 
     const takerAddress = await taker.getAddress();
-    const exitTraits = traits(takerAddress, directions.exitIsAToB);
+    const exitTraits = await traits(guard, takerAddress, directions.exitIsAToB);
     const amountIn = ether("10");
     const effectiveExitPrice = FEED_DEPEG * (10_000n - BigInt(UNWIND_DISCOUNT_BPS)) * 10n ** 10n / 10_000n;
     const expectedBadOut = amountIn * ONE / effectiveExitPrice;
@@ -335,7 +342,7 @@ describe("BreakwaterAMM", function () {
       accounts: { taker },
       tokens: { bad, good },
       feeds: { bad: badFeed, good: goodFeed },
-      contracts: { router },
+      contracts: { router, guard },
       directions,
       order
     } = await loadFixture(setupFixture);
@@ -355,7 +362,7 @@ describe("BreakwaterAMM", function () {
       await good.getAddress(),
       await bad.getAddress(),
       amountIn,
-      traits(await taker.getAddress(), directions.exitIsAToB)
+      await traits(guard, await taker.getAddress(), directions.exitIsAToB)
     );
     expect(quote.amountOut).to.equal(expectedBadOut);
   });
@@ -365,7 +372,7 @@ describe("BreakwaterAMM", function () {
       accounts: { maker, taker },
       tokens: { bad, good },
       feeds: { bad: badFeed },
-      contracts: { aqua, router },
+      contracts: { aqua, router, guard },
       directions,
       order,
       orderHash
@@ -373,7 +380,7 @@ describe("BreakwaterAMM", function () {
     await badFeed.setAnswer(FEED_DEPEG);
 
     const amountIn = ether("10");
-    const exitTraits = traits(await taker.getAddress(), directions.exitIsAToB);
+    const exitTraits = await traits(guard, await taker.getAddress(), directions.exitIsAToB);
     const before = await aqua.rawBalances(
       await maker.getAddress(),
       await router.getAddress(),
@@ -409,7 +416,7 @@ describe("BreakwaterAMM", function () {
       accounts: { maker, taker },
       tokens: { bad, good },
       feeds: { bad: badFeed },
-      contracts: { aqua, router },
+      contracts: { aqua, router, guard },
       directions,
       order,
       orderHash
@@ -419,7 +426,8 @@ describe("BreakwaterAMM", function () {
     const desiredBadOut = ether("10");
     const effectiveExitPrice = FEED_DEPEG * (10_000n - BigInt(UNWIND_DISCOUNT_BPS)) * 10n ** 10n / 10_000n;
     const expectedGoodIn = (desiredBadOut * effectiveExitPrice + ONE - 1n) / ONE;
-    const exitTraits = traits(
+    const exitTraits = await traits(
+      guard,
       await taker.getAddress(),
       directions.exitIsAToB,
       false,
@@ -477,7 +485,8 @@ describe("BreakwaterAMM", function () {
     const badBefore = await aqua.rawBalances(makerAddress, routerAddress, orderHash, badAddress);
     const goodBefore = await aqua.rawBalances(makerAddress, routerAddress, orderHash, goodAddress);
     const requested = badBefore.balance + 1n;
-    const exitTraits = traits(
+    const exitTraits = await traits(
+      guard,
       await taker.getAddress(),
       directions.exitIsAToB,
       false,
@@ -520,25 +529,26 @@ describe("BreakwaterAMM", function () {
       order
     } = await loadFixture(setupFixture);
     const amountIn = ether("10");
-    const toxicTraits = traits(await taker.getAddress(), directions.toxicIsAToB);
 
     await badFeed.setAnswer(98_000_000);
+    const boundaryTraits = await traits(guard, await taker.getAddress(), directions.toxicIsAToB);
     const boundaryQuote = await router.connect(taker).quote.staticCall(
       order,
       await bad.getAddress(),
       await good.getAddress(),
       amountIn,
-      toxicTraits
+      boundaryTraits
     );
     expect(boundaryQuote.amountOut).to.be.gt(0);
 
     await badFeed.setAnswer(97_999_999);
+    const stressedTraits = await traits(guard, await taker.getAddress(), directions.toxicIsAToB);
     await expect(router.connect(taker).quote.staticCall(
       order,
       await bad.getAddress(),
       await good.getAddress(),
       amountIn,
-      toxicTraits
+      stressedTraits
     ))
       .to.be.revertedWithCustomError(guard, "ToxicDirectionBlocked");
   });
@@ -557,7 +567,7 @@ describe("BreakwaterAMM", function () {
       await bad.getAddress(),
       await good.getAddress(),
       ether("10"),
-      traits(await taker.getAddress(), directions.toxicIsAToB)
+      await traits(guard, await taker.getAddress(), directions.toxicIsAToB)
     )).to.be.revertedWithCustomError(guard, "ToxicDirectionBlocked");
   });
 
@@ -572,7 +582,7 @@ describe("BreakwaterAMM", function () {
       orderHash
     } = await loadFixture(setupFixture);
     const takerAddress = await taker.getAddress();
-    const toxicTraits = traits(takerAddress, directions.toxicIsAToB);
+    const quotedTraits = await traits(guard, takerAddress, directions.toxicIsAToB);
     const amountIn = ether("10");
 
     const healthyQuote = await router.connect(taker).quote.staticCall(
@@ -580,7 +590,7 @@ describe("BreakwaterAMM", function () {
       await bad.getAddress(),
       await good.getAddress(),
       amountIn,
-      toxicTraits
+      quotedTraits
     );
     expect(healthyQuote.amountOut).to.be.gt(0);
     const before = await aqua.rawBalances(
@@ -597,9 +607,18 @@ describe("BreakwaterAMM", function () {
       await bad.getAddress(),
       await good.getAddress(),
       amountIn,
-      toxicTraits
+      quotedTraits
     ))
-      .to.be.revertedWithCustomError(guard, "ToxicDirectionBlocked");
+      .to.be.revertedWithCustomError(guard, "OracleCommitmentMismatch");
+
+    const refreshedTraits = await traits(guard, takerAddress, directions.toxicIsAToB);
+    await expect(router.connect(taker).quote.staticCall(
+      order,
+      await bad.getAddress(),
+      await good.getAddress(),
+      amountIn,
+      refreshedTraits
+    )).to.be.revertedWithCustomError(guard, "ToxicDirectionBlocked");
 
     const after = await aqua.rawBalances(
       await maker.getAddress(),
@@ -610,12 +629,66 @@ describe("BreakwaterAMM", function () {
     expect(after.balance).to.equal(before.balance);
   });
 
+  it("invalidates a quote when the reference feed advances at the same price", async function () {
+    const {
+      accounts: { taker },
+      tokens: { bad, good },
+      feeds: { good: goodFeed },
+      contracts: { router, guard },
+      directions,
+      order
+    } = await loadFixture(setupFixture);
+    const amountIn = ether("10");
+    const quotedTraits = await traits(
+      guard,
+      await taker.getAddress(),
+      directions.exitIsAToB
+    );
+    const quoted = await router.connect(taker).quote.staticCall(
+      order,
+      await good.getAddress(),
+      await bad.getAddress(),
+      amountIn,
+      quotedTraits
+    );
+
+    const [roundId, answer, startedAt, updatedAt] = await goodFeed.latestRoundData();
+    await goodFeed.setRoundData(
+      roundId + 1n,
+      answer,
+      startedAt,
+      updatedAt,
+      roundId + 1n
+    );
+    await expect(router.connect(taker).quote.staticCall(
+      order,
+      await good.getAddress(),
+      await bad.getAddress(),
+      amountIn,
+      quotedTraits
+    )).to.be.revertedWithCustomError(guard, "OracleCommitmentMismatch");
+
+    const refreshedTraits = await traits(
+      guard,
+      await taker.getAddress(),
+      directions.exitIsAToB
+    );
+    const refreshed = await router.connect(taker).quote.staticCall(
+      order,
+      await good.getAddress(),
+      await bad.getAddress(),
+      amountIn,
+      refreshedTraits
+    );
+    expect(refreshed.amountOut).to.equal(quoted.amountOut);
+  });
+
   it("rolls back when the maker's physical allowance no longer backs the virtual balance", async function () {
     const {
       accounts: { maker, taker },
       tokens: { bad, good },
       feeds: { bad: badFeed },
-      contracts: { aqua, router },
+      contracts: { aqua, router, guard },
       directions,
       order,
       orderHash
@@ -629,7 +702,7 @@ describe("BreakwaterAMM", function () {
     const badAddress = await bad.getAddress();
     const goodAddress = await good.getAddress();
     const amountIn = ether("10");
-    const exitTraits = traits(takerAddress, directions.exitIsAToB);
+    const exitTraits = await traits(guard, takerAddress, directions.exitIsAToB);
     const quote = await router.connect(taker).quote.staticCall(
       order,
       goodAddress,
@@ -677,10 +750,11 @@ describe("BreakwaterAMM", function () {
     expect(await good.balanceOf(takerAddress)).to.equal(physicalBefore.takerGood);
   });
 
-  it("authenticates its VM caller and validates the encoded instruction length", async function () {
+  it("authenticates the VM call, consumes a commitment, and rejects recomputation", async function () {
     const {
       accounts: { maker, taker },
       tokens: { bad, good },
+      feeds: { bad: badFeed },
       contracts: { router, guard }
     } = await loadFixture(setupFixture);
     const takerAddress = await taker.getAddress();
@@ -714,7 +788,76 @@ describe("BreakwaterAMM", function () {
     await expect(guard.connect(routerSigner).extruction(false, 0, query, registers, "0x00a1", "0x"))
       .to.be.revertedWithCustomError(guard, "InvalidPeggedInstructionLength")
       .withArgs(161);
+
+    await expect(guard.connect(routerSigner).extruction(false, 0, query, registers, "0x00a2", "0x"))
+      .to.be.revertedWithCustomError(guard, "MissingOracleCommitment")
+      .withArgs(0);
+    const shortCommitment = ethers.hexlify(new Uint8Array(31));
+    await expect(guard.connect(routerSigner).extruction(
+      false, 0, query, registers, "0x00a2", shortCommitment
+    ))
+      .to.be.revertedWithCustomError(guard, "MissingOracleCommitment")
+      .withArgs(31);
+
+    const commitment = await guard.currentOracleCommitment();
+    const mismatch = ethers.keccak256(ethers.toUtf8Bytes("different observation"));
+    await expect(guard.connect(routerSigner).extruction(
+      false, 0, query, registers, "0x00a2", mismatch
+    ))
+      .to.be.revertedWithCustomError(guard, "OracleCommitmentMismatch")
+      .withArgs(mismatch, commitment);
+
+    const recomputedExactIn = { ...registers, amountOut: 1n };
+    await expect(guard.connect(routerSigner).extruction(
+      false, 0, query, recomputedExactIn, "0x00a2", commitment
+    ))
+      .to.be.revertedWithCustomError(guard, "BreakwaterRecomputeDetected")
+      .withArgs(recomputedExactIn.amountIn, recomputedExactIn.amountOut);
+
+    const exactOutQuery = { ...query, isExactIn: false };
+    const recomputedExactOut = { ...registers, amountIn: 1n, amountOut: ether("10") };
+    await expect(guard.connect(routerSigner).extruction(
+      false, 0, exactOutQuery, recomputedExactOut, "0x00a2", commitment
+    ))
+      .to.be.revertedWithCustomError(guard, "BreakwaterRecomputeDetected")
+      .withArgs(recomputedExactOut.amountIn, recomputedExactOut.amountOut);
+
+    const healthyArgsWithTail = ethers.concat([commitment, "0xdeadbeef"]);
+    const healthyResult = await guard.connect(routerSigner).extruction.staticCall(
+      false, 0, query, registers, "0x00a2", healthyArgsWithTail
+    );
+    expect(healthyResult.choppedLength).to.equal(32);
+
+    await badFeed.setAnswer(FEED_DEPEG);
+    const stressedCommitment = await guard.currentOracleCommitment();
+    const stressedArgsWithTail = ethers.concat([stressedCommitment, "0xdeadbeef"]);
+    const stressedResult = await guard.connect(routerSigner).extruction.staticCall(
+      false, 0, query, registers, "0x00a2", stressedArgsWithTail
+    );
+    expect(stressedResult.updatedNextPC).to.equal(162);
+    expect(stressedResult.choppedLength).to.equal(32);
+    expect(stressedResult.updatedSwap.amountOut).to.be.gt(0);
     await ethers.provider.send("hardhat_stopImpersonatingAccount", [routerAddress]);
+  });
+
+  it("rejects one price feed being wired to both sides of the pair", async function () {
+    const {
+      tokens: { bad, good },
+      feeds: { bad: badFeed },
+      contracts: { router, guard }
+    } = await loadFixture(setupFixture);
+    const guardFactory = await ethers.getContractFactory("BreakwaterGuard");
+
+    await expect(guardFactory.deploy(
+      await router.getAddress(),
+      await bad.getAddress(),
+      await good.getAddress(),
+      await badFeed.getAddress(),
+      await badFeed.getAddress(),
+      MAX_STALENESS,
+      TRIGGER_RATIO,
+      UNWIND_DISCOUNT_BPS
+    )).to.be.revertedWithCustomError(guard, "IdenticalFeeds");
   });
 
   it("fails closed on stale or invalid oracle data", async function () {
@@ -727,7 +870,7 @@ describe("BreakwaterAMM", function () {
       order
     } = await loadFixture(setupFixture);
     const now = await time.latest();
-    const exitTraits = traits(await taker.getAddress(), directions.exitIsAToB);
+    const exitTraits = await traits(guard, await taker.getAddress(), directions.exitIsAToB);
 
     await badFeed.setRoundData(2, FEED_DEPEG, now - MAX_STALENESS - 1, now - MAX_STALENESS - 1, 2);
     await expect(router.connect(taker).quote.staticCall(
@@ -773,6 +916,7 @@ describe("BreakwaterAMM", function () {
       order
     } = await loadFixture(setupFixture);
     const now = await time.latest();
+    const exitTraits = await traits(guard, await taker.getAddress(), directions.exitIsAToB);
     await goodFeed.setRoundData(2, FEED_ONE, now - MAX_STALENESS - 1, now - MAX_STALENESS - 1, 2);
 
     await expect(router.connect(taker).quote.staticCall(
@@ -780,7 +924,7 @@ describe("BreakwaterAMM", function () {
       await good.getAddress(),
       await bad.getAddress(),
       ether("10"),
-      traits(await taker.getAddress(), directions.exitIsAToB)
+      exitTraits
     )).to.be.revertedWithCustomError(guard, "StaleFeed");
   });
 
@@ -798,8 +942,8 @@ describe("BreakwaterAMM", function () {
 
     const takerAddress = await taker.getAddress();
     const amountIn = ether("10");
-    const toxicTraits = traits(takerAddress, directions.toxicIsAToB);
-    const exitTraits = traits(takerAddress, directions.exitIsAToB);
+    const toxicTraits = await traits(guard, takerAddress, directions.toxicIsAToB);
+    const exitTraits = await traits(guard, takerAddress, directions.exitIsAToB);
 
     await expect(router.connect(taker).quote.staticCall(
       order,
