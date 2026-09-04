@@ -33,6 +33,24 @@ build.
 
 ETHOnline 2026 Classic — 1inch, **Build an Aqua App**.
 
+## Build and reproduce
+
+Node 24 is used in CI. Yarn 1 is invoked through `npx` so no global install is
+required:
+
+```sh
+npx -y yarn@1.22.22 install --frozen-lockfile
+npx -y yarn@1.22.22 build
+npx -y yarn@1.22.22 test
+```
+
+The current spike has no claimed public-network deployment. The test fixture
+deploys Aqua, the AquaSwapVMRouter, Breakwater contracts, price feeds, tokens,
+and shipped positions to a clean local Hardhat chain before exercising real
+ERC-20 transfers. Public-network deployment instructions will be added with the
+first supported-network release rather than implying that ephemeral addresses
+are live contracts.
+
 ## Provenance
 
 Official 1inch dependencies and the official SwapVM template are pinned in
