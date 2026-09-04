@@ -7,7 +7,7 @@ mainnet transaction. It proves that Breakwater's official Aqua/SwapVM path can
 ship and swap the real 6-decimal USDC and USDT contracts while reading the real
 Chainlink feed proxies at a fixed post-kickoff Ethereum state.
 
-- Breakwater commit under test: `5ebf685`
+- Breakwater commit under test: `e00f8b0`
 - Ethereum block: `25905465`
 - Block hash: `0xfba89fca6a0f936d0bdee7ae7a0f0ad3676d415119b043ba20f47e5e4cbbff04`
 - Block timestamp: `2026-09-04T17:31:47Z`
@@ -24,7 +24,7 @@ MAINNET_FORK_BLOCK=25905465 \
 npx -y yarn@1.22.22 test:fork
 ```
 
-Result on 2026-09-04: `1 passing (38s)`.
+Result on 2026-09-04 after the oracle-boundary hardening: `1 passing (12s)`.
 
 ## Fixed external state
 
@@ -45,7 +45,7 @@ assuming a one-hour update cadence.
 
 - Input: `10,000,000` USDT units (10 USDT)
 - Quote/output: `9,997,505` USDC units (9.997505 USDC)
-- Local fork transaction: `0xfb599726a46645ce8d5ff5078295efaadb28911657f8d3a46a5b02d706ec4408`
+- Local fork transaction: `0x125af33a50bc6a130932cbf0ae94ed150df649d1f523f3815ecf5356c95da296`
 - Aqua USDC virtual balance: `100,000,000` -> `90,002,495`
 - Aqua USDT virtual balance: `100,000,000` -> `110,000,000`
 
