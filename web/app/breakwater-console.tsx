@@ -18,6 +18,7 @@ import {
   createPublicClient,
   createWalletClient,
   custom,
+  fallback,
   formatUnits,
   http,
   isAddress as isViemAddress,
@@ -46,7 +47,13 @@ import {
   shortenHex,
 } from '@/lib/breakwater';
 
-const publicClient = createPublicClient({ chain: sepolia, transport: http() });
+const publicClient = createPublicClient({
+  chain: sepolia,
+  transport: fallback([
+    http('https://ethereum-sepolia-rpc.publicnode.com'),
+    http(),
+  ]),
+});
 const QUOTE_LIFETIME_SECONDS = 10 * 60;
 const SLIPPAGE_BPS = 50n;
 const BPS = 10_000n;
@@ -1057,11 +1064,19 @@ export function BreakwaterConsole() {
           <p className="state-summary">
             {!isConfigured
               ? 'The taker console is ready; the Sepolia position and public manifest are the remaining commission step.'
+              : !market
+                ? 'Checking the onchain position and guard before quoting. No market state is assumed while the read is pending.'
               : isStressed
                 ? `The treasury will not accept more ${market?.badSymbol}. Only ${market?.goodSymbol} in → ${market?.badSymbol} out remains open.`
                 : 'Both directions follow the Aqua pegged curve while the observed ratio remains above the trigger.'}
           </p>
         </section>
+
+        <p className="action-help">
+          Testnet demonstration: no-value tokens and fixed demo prices of $0.94
+          and $1.00, not live market feeds. Protection applies to this Aqua
+          position only, not other strategies or the entire treasury wallet.
+        </p>
 
         <div className="console-grid">
           <section
@@ -1218,6 +1233,12 @@ export function BreakwaterConsole() {
               </span>
             </div>
 
+            <p className="action-help">
+              You are the buyer: you receive the impaired asset at a discount
+              while the treasury reduces its holdings. This is not a
+              redemption or a guarantee that the asset will recover.
+            </p>
+
             <div className="amount-field">
               <label htmlFor="pay-amount">You pay</label>
               <div className="amount-input-row">
@@ -1317,7 +1338,7 @@ export function BreakwaterConsole() {
                     : wrongNetwork
                       ? 'Breakwater executes this demo on Sepolia.'
                       : market && (parsedAmount <= 0n || exceedsDemoLimit)
-                        ? 'Enter an amount from 0 to 1,000 before requesting a quote.'
+                        ? 'Enter an amount greater than 0 and at most 1,000 before requesting a quote.'
                         : 'Your wallet shows every state-changing step before submission.'}
             </p>
             {account &&

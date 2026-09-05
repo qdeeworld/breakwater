@@ -60,8 +60,9 @@ npx -y yarn@1.22.22 test:fork
 The captured block, feed rounds, quote, and Aqua balance deltas are recorded in
 [`evidence/mainnet-fork-2026-09-04.md`](evidence/mainnet-fork-2026-09-04.md).
 
-The taker console lives in [`web`](web). It deliberately shows an offline
-commissioning state until a real deployment manifest is committed:
+The taker console lives in [`web`](web) and reads the committed Sepolia market
+manifest. The intended public hostname is `https://breakwater.dolepee.com`;
+website access and an independent wallet completion remain launch checks:
 
 ```sh
 cd web
@@ -96,14 +97,20 @@ deployment, operators must still verify each distinct proxy's network, asset/USD
 denomination, heartbeat, and decimals against the oracle publisher's canonical
 registry; AggregatorV3 cannot prove those semantics to the guard itself.
 
-No Breakwater public-network deployment is claimed yet. Local tests deploy the
-complete stack, including the same immutable stressed demo market used by the
-public journey. The pinned fork additionally calls canonical Ethereum Aqua and
-AquaSwapVMRouter contracts, while Breakwater's contracts and transactions
-remain ephemeral fork state.
+The complete demonstration stack was deployed to Ethereum Sepolia on September
+5, 2026. All 11 deployment and initialization receipts succeeded; addresses and
+transaction hashes are in [`evidence/sepolia-deployment-2026-09-05.json`](evidence/sepolia-deployment-2026-09-05.json).
+The market uses no-value test tokens and fixed demonstration prices, not live
+Chainlink feeds. Protection applies only to this position, not other strategies
+or total wallet exposure. The taker buys impaired inventory; no recovery,
+redemption, or capital-preservation guarantee is made.
 
-Once an event-only deployer is configured with Sepolia ETH, the dedicated
-public-market script self-deploys the exact pinned Aqua/SwapVM stack, immutable
+Local tests reproduce the same immutable stressed market. The separate pinned
+fork calls canonical Ethereum Aqua and AquaSwapVMRouter contracts, while
+Breakwater's fork transactions remain ephemeral state, not mainnet broadcasts.
+
+The event-only deployer's dedicated public-market script self-deploys the exact
+pinned Aqua/SwapVM stack, immutable
 testnet-only price observations, two demo tokens, the guard, and a funded Aqua
 position. The reserve token faucet permits one 1,000-token claim per address and
 has a hard 100,000-token global issuance cap, so public claims cannot exhaust

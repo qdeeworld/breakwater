@@ -6,7 +6,7 @@ import '@fontsource/ibm-plex-mono/500.css';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://breakwater.qdworld001.chatgpt.site'),
+  metadataBase: new URL('https://breakwater.dolepee.com'),
   title: 'Breakwater — Aqua liquidity that stops buying the depeg',
   description:
     'Execute a guarded treasury unwind through 1inch Aqua and SwapVM when a stablecoin leaves its safety band.',
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://breakwater.qdworld001.chatgpt.site/og.png',
+        url: 'https://breakwater.dolepee.com/og.png',
         width: 1200,
         height: 630,
         alt: 'Breakwater treasury tide gate between impaired and reserve assets',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Breakwater',
     description: 'Aqua liquidity that stops buying the depeg.',
-    images: ['https://breakwater.qdworld001.chatgpt.site/og.png'],
+    images: ['https://breakwater.dolepee.com/og.png'],
   },
 };
 
