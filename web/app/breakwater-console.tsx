@@ -30,7 +30,7 @@ import {
   type Hex,
 } from 'viem';
 import { sepolia } from 'viem/chains';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   TARGET_CHAIN_ID,
@@ -235,6 +235,7 @@ function forgetPendingSwap() {
 }
 
 export function BreakwaterConsole() {
+  const sessionAccount = useRef<Address | undefined>(undefined);
   const [phase, setPhase] = useState<AsyncPhase>('idle');
   const [account, setAccount] = useState<Address>();
   const [walletChainId, setWalletChainId] = useState<number>();
@@ -457,7 +458,9 @@ export function BreakwaterConsole() {
         args: [wallet, deployment.router],
       }),
     ]);
-    setUser({ goodBalance, badBalance, allowance });
+    if (sessionAccount.current?.toLowerCase() === wallet.toLowerCase()) {
+      setUser({ goodBalance, badBalance, allowance });
+    }
   }, []);
 
   useEffect(() => {
@@ -492,21 +495,19 @@ export function BreakwaterConsole() {
   useEffect(() => {
     const ethereum = getEthereum();
     if (!ethereum?.request) return;
-    void Promise.all([
-      ethereum.request({ method: 'eth_accounts' }),
-      ethereum.request({ method: 'eth_chainId' }),
-    ]).then(([accounts, chainId]) => {
-      const knownAccounts = accounts as Address[];
-      if (knownAccounts[0]) setAccount(knownAccounts[0]);
-      setWalletChainId(Number(chainId));
-    });
+    // Connection is opt-in for each page session. Provider events and a reload
+    // must not silently undo an explicit app disconnect.
     const handleAccounts = (...args: unknown[]) => {
+      if (!sessionAccount.current) return;
       const accounts = (args[0] ?? []) as Address[];
+      sessionAccount.current = accounts[0];
       setAccount(accounts[0]);
+      setUser(undefined);
       setQuote(undefined);
       setReceipt(undefined);
     };
     const handleChain = (...args: unknown[]) => {
+      if (!sessionAccount.current) return;
       setWalletChainId(Number(args[0]));
       setQuote(undefined);
     };
@@ -594,14 +595,33 @@ export function BreakwaterConsole() {
       setNotice(undefined);
       const wallet = getWallet();
       const [nextAccount] = await wallet.requestAddresses();
+      if (!nextAccount) throw new Error('No wallet account was selected.');
+      const nextChainId = await wallet.getChainId();
+      sessionAccount.current = nextAccount;
       setAccount(nextAccount);
-      setWalletChainId(await wallet.getChainId());
+      setWalletChainId(nextChainId);
     } catch (error) {
       setNotice({ tone: 'error', message: describeError(error) });
     } finally {
       setPhase('idle');
     }
   }, [getWallet]);
+
+  const disconnect = useCallback(() => {
+    sessionAccount.current = undefined;
+    setAccount(undefined);
+    setWalletChainId(undefined);
+    setUser(undefined);
+    setQuote(undefined);
+    setReceipt(undefined);
+    // Keep pendingSwap and its durable receipt lock: disconnecting does not
+    // cancel a transaction that has already been broadcast.
+    setNotice({
+      tone: 'info',
+      message:
+        'Disconnected from Breakwater. Wallet permissions and token approvals are unchanged. Any submitted swap can still be checked.',
+    });
+  }, []);
 
   const switchNetwork = useCallback(async () => {
     try {
@@ -930,70 +950,63 @@ export function BreakwaterConsole() {
     if (!isConfigured)
       return {
         label: 'Position not deployed',
-        action: () => undefined,
+        action: 'none' as const,
         disabled: true,
       };
     if (pendingSwap)
       return {
         label: 'Check submitted swap',
-        action: resumePendingSwap,
+        action: 'resume' as const,
         disabled: false,
       };
     if (!account)
-      return { label: 'Connect wallet', action: connect, disabled: false };
+      return { label: 'Connect wallet', action: 'connect' as const, disabled: false };
     if (wrongNetwork)
       return {
         label: `Switch to ${TARGET_NETWORK}`,
-        action: switchNetwork,
+        action: 'switch' as const,
         disabled: false,
       };
     if (exceedsDemoLimit)
       return {
         label: 'Reduce amount to 1,000 or less',
-        action: () => undefined,
+        action: 'none' as const,
         disabled: true,
       };
     if (needsTokens)
       return {
         label: `Claim demo ${market?.goodSymbol ?? 'tokens'}`,
-        action: claimDemoTokens,
+        action: 'claim' as const,
         disabled: false,
       };
     if (!quote || quote.amountIn !== parsedAmount) {
       return {
         label: 'Get fresh quote',
-        action: getQuote,
+        action: 'quote' as const,
         disabled: parsedAmount <= 0n || !market,
       };
     }
     if (needsApproval)
       return {
         label: `Approve ${market?.goodSymbol ?? 'token'}`,
-        action: approve,
+        action: 'approve' as const,
         disabled: false,
       };
     return {
       label: `Swap ${market?.goodSymbol ?? ''} for ${market?.badSymbol ?? ''}`,
-      action: swap,
+      action: 'swap' as const,
       disabled: false,
     };
   }, [
     account,
-    approve,
-    connect,
-    getQuote,
     isConfigured,
     market,
-    claimDemoTokens,
     exceedsDemoLimit,
     needsApproval,
     needsTokens,
     pendingSwap,
     parsedAmount,
     quote,
-    resumePendingSwap,
-    swap,
-    switchNetwork,
     wrongNetwork,
   ]);
 
@@ -1037,10 +1050,17 @@ export function BreakwaterConsole() {
             {TARGET_NETWORK} · demo market
           </span>
           {account ? (
-            <span className="wallet-button connected" title={account}>
+            <button
+              className="wallet-button connected"
+              type="button"
+              onClick={disconnect}
+              disabled={isBusy}
+              title={account}
+              aria-label={`Disconnect wallet ${shortenHex(account)}`}
+            >
               <WalletCards aria-hidden="true" />
-              {shortenHex(account)}
-            </span>
+              Disconnect
+            </button>
           ) : (
             <button
               className="wallet-button"
@@ -1318,7 +1338,19 @@ export function BreakwaterConsole() {
             <button
               className="primary-action"
               type="button"
-              onClick={primaryAction.action}
+              onClick={() => {
+                const actions = {
+                  none: () => undefined,
+                  resume: resumePendingSwap,
+                  connect,
+                  switch: switchNetwork,
+                  claim: claimDemoTokens,
+                  quote: getQuote,
+                  approve,
+                  swap,
+                };
+                void actions[primaryAction.action]();
+              }}
               disabled={primaryAction.disabled || isBusy}
               aria-busy={isBusy}
               aria-describedby="primary-action-help"
