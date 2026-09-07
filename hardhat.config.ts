@@ -10,8 +10,11 @@ import { HardhatUserConfig } from 'hardhat/config';
 
 dotenv.config();
 
-const mainnetForkUrl = process.env.MAINNET_RPC_URL;
-const mainnetForkBlock = Number(process.env.MAINNET_FORK_BLOCK ?? "25905465");
+// Initialize as a fork before any reset: EDR cannot carry synthetic genesis
+// storage overrides into historical state (NomicFoundation/edr#911).
+const mainnetForkUrl = process.env.UNWIND_RPC_URL ?? process.env.MAINNET_RPC_URL;
+const mainnetForkBlock = Number(process.env.UNWIND_FORK_BLOCK ??
+  (process.env.UNWIND_RPC_URL ? "16802331" : process.env.MAINNET_FORK_BLOCK ?? "25905465"));
 const sepoliaPrivateKey = process.env.PRIVATE_KEY?.replace(/^0x/, "");
 
 const config: HardhatUserConfig = {
