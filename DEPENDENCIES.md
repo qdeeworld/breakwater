@@ -28,7 +28,42 @@ recoverable in repository history for baseline reproduction. Aqua's Solidity
 source at the old template pin is identical to v1.0.0; SwapVM required an
 explicit API migration.
 
-## License note
+## Release and package versions
+
+The release tags above differ from package metadata: Aqua v1.0.0 contains
+package version `0.1.0`; SwapVM v1.0.2 contains package version `0.0.6`.
+The exact commits identify the imported source. `THIRD_PARTY_NOTICES` records
+these distinctions, solidity-utils `6.9.7`, and SwapVM SDK `0.4.1`.
+
+## Template changes
+
+The import at `ad719fc` contains 19 files byte-identical to the official template
+at the pinned source commit. The project's README and `.gitignore` are local
+replacements; the template's developer-preview PDF was not imported.
+
+The following inherited implementation files were modified on September 4, 2026:
+
+| File | Breakwater modification | Commits |
+| --- | --- | --- |
+| `contracts/AquaAMM.sol` | Pair-at-call-time maker order API | `999d992` |
+| `contracts/MockTaker.sol` | Explicit token-in and token-out call parameters | `999d992` |
+| `deploy/deploy-aqua.ts` | Router version changed to 1.0.2 | `833ceb9` |
+| `test/AquaAMM.test.ts` | New pair API and official SDK trait encoding | `999d992` |
+| `test/utils/fixtures.ts` | Router version changed to 1.0.2 | `833ceb9` |
+| `test/utils/SwapVMHelpers.ts` | Replace handwritten encoding with official SDK wrapper; validate integer bounds | `999d992`, `833ceb9` |
+
+`test/utils/ProgramBuilder.ts` remains unchanged template code. New
+`contracts/BreakwaterAMM.sol` is derived from the template's AquaAMM and marks
+that origin/date in its source. Other project-specific files and AI assistance
+are catalogued in [AI_DISCLOSURE.md](AI_DISCLOSURE.md).
+
+The inherited `hardhat.config.ts`, `.env.example`, `package.json`, and `yarn.lock`
+also have project-specific configuration changes; their exact dates and patches
+are available with `git log -p -- <path>`. These include pinned fork setup,
+dependency migration, and public Sepolia deployment configuration. Notices were
+updated on September 7, 2026; the upstream license texts remain unchanged.
+
+## License preservation
 
 Aqua and SwapVM use Degensoft source licenses rather than a standard permissive
 license. Their license files and third-party notices must remain intact. New

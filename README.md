@@ -1,6 +1,8 @@
 # Breakwater
 
 > **Powered by SwapVM — © Degensoft Ltd 2025**
+>
+> **Powered by Aqua — © Degensoft Ltd 2025**
 
 Breakwater is an Aqua/SwapVM liquidity position for DAO treasuries. It provides
 two-way stablecoin liquidity while the pair is healthy, then turns the same
