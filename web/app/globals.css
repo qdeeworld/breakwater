@@ -604,9 +604,11 @@ a {
   height: 18px;
 }
 .action-help {
+  display: block;
   margin: 8px 4px 0;
   color: rgba(var(--primary-rgb), 0.66);
-  font-size: 11px;
+  font-size: 14px;
+  line-height: 1.5;
   text-align: center;
 }
 .spin {

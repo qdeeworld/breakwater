@@ -165,6 +165,8 @@ async function waitForSuccessfulReceipt(hash: Hex) {
   let unsafeReplacement: 'cancelled' | 'replaced' | undefined;
   const transactionReceipt = await publicClient.waitForTransactionReceipt({
     hash,
+    confirmations: 1,
+    pollingInterval: 1_000,
     onReplaced(replacement) {
       if (replacement.reason !== 'repriced') {
         unsafeReplacement = replacement.reason;
@@ -243,6 +245,15 @@ export function BreakwaterConsole() {
   const [market, setMarket] = useState<MarketSnapshot>();
   const [user, setUser] = useState<UserSnapshot>();
   const [quote, setQuote] = useState<Quote>();
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState<string>();
+  const [quoteRevision, setQuoteRevision] = useState(0);
+  const [transactionProgress, setTransactionProgress] = useState<{
+    stage: 'wallet' | 'submitted' | 'confirmed';
+    hash?: Hex;
+    submittedAt?: number;
+    seconds?: number;
+  }>();
   const [receipt, setReceipt] = useState<Receipt>();
   const [pendingSwap, setPendingSwap] = useState<PendingSwap>();
   const [notice, setNotice] = useState<{
@@ -592,6 +603,7 @@ export function BreakwaterConsole() {
   const connect = useCallback(async () => {
     try {
       setPhase('connecting');
+      setTransactionProgress(undefined);
       setNotice(undefined);
       const wallet = getWallet();
       const [nextAccount] = await wallet.requestAddresses();
@@ -608,6 +620,7 @@ export function BreakwaterConsole() {
   }, [getWallet]);
 
   const disconnect = useCallback(() => {
+    setTransactionProgress(undefined);
     sessionAccount.current = undefined;
     setAccount(undefined);
     setWalletChainId(undefined);
@@ -626,6 +639,7 @@ export function BreakwaterConsole() {
   const switchNetwork = useCallback(async () => {
     try {
       setPhase('switching');
+      setTransactionProgress(undefined);
       setNotice(undefined);
       await getWallet().switchChain({ id: TARGET_CHAIN_ID });
       setWalletChainId(TARGET_CHAIN_ID);
@@ -649,79 +663,147 @@ export function BreakwaterConsole() {
     ? parsedAmount > parseUnits('1000', market.goodDecimals)
     : false;
 
-  const getQuote = useCallback(async () => {
+  const marketReady = !!market;
+  const oracleCommitment = market?.commitment;
+  const getQuote = useCallback(
+    async (signal: AbortSignal) => {
+      if (
+        !deployment ||
+        !marketReady ||
+        !account ||
+        wrongNetwork ||
+        parsedAmount <= 0n ||
+        exceedsDemoLimit
+      )
+        return;
+      try {
+        setQuoteLoading(true);
+        setQuoteError(undefined);
+        const commitment = await publicClient.readContract({
+          address: deployment.guard,
+          abi: guardAbi,
+          functionName: 'currentOracleCommitment',
+        });
+        const latestBlock = await publicClient.getBlock({ blockTag: 'latest' });
+        const deadline = latestBlock.timestamp + BigInt(QUOTE_LIFETIME_SECONDS);
+        const discoveryTraits = buildTakerTraits(commitment, 1n, deadline);
+        const discovery = await publicClient.simulateContract({
+          account,
+          address: deployment.router,
+          abi: routerAbi,
+          functionName: 'quote',
+          args: [
+            deployment.order,
+            deployment.goodToken,
+            deployment.badToken,
+            parsedAmount,
+            discoveryTraits,
+          ],
+        });
+        const minimumOut = (discovery.result[1] * (BPS - SLIPPAGE_BPS)) / BPS;
+        const traits = buildTakerTraits(commitment, minimumOut, deadline);
+        const finalQuote = await publicClient.simulateContract({
+          account,
+          address: deployment.router,
+          abi: routerAbi,
+          functionName: 'quote',
+          args: [
+            deployment.order,
+            deployment.goodToken,
+            deployment.badToken,
+            parsedAmount,
+            traits,
+          ],
+        });
+        if (signal.aborted) return;
+        setQuote({
+          amountIn: finalQuote.result[0],
+          amountOut: finalQuote.result[1],
+          minimumOut,
+          deadline,
+          commitment,
+          traits,
+        });
+      } catch (error) {
+        if (signal.aborted) return;
+        setQuote(undefined);
+        setQuoteError(describeError(error));
+      } finally {
+        if (!signal.aborted) setQuoteLoading(false);
+      }
+    },
+    [account, exceedsDemoLimit, marketReady, parsedAmount, wrongNetwork],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    // Keep the reviewed terms visible while the wallet signs or the chain mines.
+    if (isBusy) return;
+    // Invalidate before debounce; cancelled RPC responses cannot restore an old quote.
+    // oxlint-disable-next-line react/react-compiler -- synchronize the quote with external wallet/market inputs
+    setQuote(undefined);
+    setQuoteError(undefined);
+    setQuoteLoading(false);
     if (
-      !deployment ||
-      !market ||
       !account ||
+      walletChainId !== TARGET_CHAIN_ID ||
+      !marketReady ||
       parsedAmount <= 0n ||
-      exceedsDemoLimit
+      exceedsDemoLimit ||
+      pendingSwap
     )
       return;
-    try {
-      setPhase('quoting');
-      setNotice(undefined);
-      setReceipt(undefined);
-      const commitment = await publicClient.readContract({
-        address: deployment.guard,
-        abi: guardAbi,
-        functionName: 'currentOracleCommitment',
-      });
-      const latestBlock = await publicClient.getBlock({ blockTag: 'latest' });
-      const deadline = latestBlock.timestamp + BigInt(QUOTE_LIFETIME_SECONDS);
-      const discoveryTraits = buildTakerTraits(commitment, 1n, deadline);
-      const discovery = await publicClient.simulateContract({
-        account,
-        address: deployment.router,
-        abi: routerAbi,
-        functionName: 'quote',
-        args: [
-          deployment.order,
-          deployment.goodToken,
-          deployment.badToken,
-          parsedAmount,
-          discoveryTraits,
-        ],
-      });
-      const minimumOut = (discovery.result[1] * (BPS - SLIPPAGE_BPS)) / BPS;
-      const traits = buildTakerTraits(commitment, minimumOut, deadline);
-      const finalQuote = await publicClient.simulateContract({
-        account,
-        address: deployment.router,
-        abi: routerAbi,
-        functionName: 'quote',
-        args: [
-          deployment.order,
-          deployment.goodToken,
-          deployment.badToken,
-          parsedAmount,
-          traits,
-        ],
-      });
-      setQuote({
-        amountIn: finalQuote.result[0],
-        amountOut: finalQuote.result[1],
-        minimumOut,
-        deadline,
-        commitment,
-        traits,
-      });
-      setNotice({
-        tone: 'success',
-        message: 'Quote bound to the current oracle round for 10 minutes.',
-      });
-    } catch (error) {
-      setQuote(undefined);
-      setNotice({ tone: 'error', message: describeError(error) });
-    } finally {
-      setPhase('idle');
-    }
-  }, [account, exceedsDemoLimit, market, parsedAmount]);
+    setQuoteLoading(true);
+    const timer = window.setTimeout(
+      () => void getQuote(controller.signal),
+      400,
+    );
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [
+    account,
+    walletChainId,
+    marketReady,
+    parsedAmount,
+    exceedsDemoLimit,
+    pendingSwap,
+    isBusy,
+    oracleCommitment,
+    quoteRevision,
+    getQuote,
+  ]);
+
+  useEffect(() => {
+    if (!quote) return;
+    const remaining = Number(quote.deadline) * 1000 - Date.now();
+    const timer = window.setTimeout(
+      () => setQuoteRevision((value) => value + 1),
+      Math.max(0, remaining),
+    );
+    return () => window.clearTimeout(timer);
+  }, [quote]);
+
+  const refreshQuote = () => setQuoteRevision((value) => value + 1);
+
+  const confirmTransaction = useCallback(async (hash: Hex) => {
+    const submittedAt = Date.now();
+    setTransactionProgress({ stage: 'submitted', hash, submittedAt });
+    const result = await waitForSuccessfulReceipt(hash);
+    setTransactionProgress({
+      stage: 'confirmed',
+      hash,
+      seconds: Math.max(1, Math.round((Date.now() - submittedAt) / 1000)),
+    });
+    return result;
+  }, []);
 
   const claimDemoTokens = useCallback(async () => {
     if (!deployment || !market || !account) return;
     try {
       setPhase('claiming');
+      setTransactionProgress(undefined);
       setNotice(undefined);
       const simulation = await publicClient.simulateContract({
         account,
@@ -729,8 +811,9 @@ export function BreakwaterConsole() {
         abi: erc20Abi,
         functionName: 'claim',
       });
+      setTransactionProgress({ stage: 'wallet' });
       const hash = await getWallet().writeContract(simulation.request);
-      await waitForSuccessfulReceipt(hash);
+      await confirmTransaction(hash);
       await refreshUser(account);
       setNotice({
         tone: 'success',
@@ -741,12 +824,13 @@ export function BreakwaterConsole() {
     } finally {
       setPhase('idle');
     }
-  }, [account, getWallet, market, refreshUser]);
+  }, [account, getWallet, market, refreshUser, confirmTransaction]);
 
   const approve = useCallback(async () => {
     if (!deployment || !account || !quote) return;
     try {
       setPhase('approving');
+      setTransactionProgress(undefined);
       setNotice(undefined);
       const simulation = await publicClient.simulateContract({
         account,
@@ -755,8 +839,9 @@ export function BreakwaterConsole() {
         functionName: 'approve',
         args: [deployment.router, quote.amountIn],
       });
+      setTransactionProgress({ stage: 'wallet' });
       const hash = await getWallet().writeContract(simulation.request);
-      await waitForSuccessfulReceipt(hash);
+      await confirmTransaction(hash);
       await refreshUser(account);
       setNotice({
         tone: 'success',
@@ -767,14 +852,12 @@ export function BreakwaterConsole() {
     } finally {
       setPhase('idle');
     }
-  }, [account, getWallet, quote, refreshUser]);
+  }, [account, getWallet, quote, refreshUser, confirmTransaction]);
 
   const settlePendingSwap = useCallback(
     async (submitted: PendingSwap) => {
       try {
-        const transactionReceipt = await waitForSuccessfulReceipt(
-          submitted.hash,
-        );
+        const transactionReceipt = await confirmTransaction(submitted.hash);
         const swapEvent = parseEventLogs({
           abi: routerAbi,
           eventName: 'Swapped',
@@ -832,7 +915,7 @@ export function BreakwaterConsole() {
         throw error;
       }
     },
-    [account, refreshMarket, refreshUser],
+    [account, refreshMarket, refreshUser, confirmTransaction],
   );
 
   const swap = useCallback(async () => {
@@ -840,6 +923,7 @@ export function BreakwaterConsole() {
     let submitted: PendingSwap | undefined;
     try {
       setPhase('swapping');
+      setTransactionProgress(undefined);
       setNotice(undefined);
       const [currentCommitment, latestBlock] = await Promise.all([
         publicClient.readContract({
@@ -870,6 +954,7 @@ export function BreakwaterConsole() {
           quote.traits,
         ],
       });
+      setTransactionProgress({ stage: 'wallet' });
       const hash = await getWallet().writeContract(simulation.request);
       submitted = {
         hash,
@@ -960,7 +1045,11 @@ export function BreakwaterConsole() {
         disabled: false,
       };
     if (!account)
-      return { label: 'Connect wallet', action: 'connect' as const, disabled: false };
+      return {
+        label: 'Connect wallet',
+        action: 'connect' as const,
+        disabled: false,
+      };
     if (wrongNetwork)
       return {
         label: `Switch to ${TARGET_NETWORK}`,
@@ -973,6 +1062,18 @@ export function BreakwaterConsole() {
         action: 'none' as const,
         disabled: true,
       };
+    if (!user)
+      return {
+        label: 'Reading wallet balances…',
+        action: 'none' as const,
+        disabled: true,
+      };
+    if (parsedAmount <= 0n)
+      return {
+        label: 'Enter an amount',
+        action: 'none' as const,
+        disabled: true,
+      };
     if (needsTokens)
       return {
         label: `Claim demo ${market?.goodSymbol ?? 'tokens'}`,
@@ -981,9 +1082,9 @@ export function BreakwaterConsole() {
       };
     if (!quote || quote.amountIn !== parsedAmount) {
       return {
-        label: 'Get fresh quote',
+        label: quoteError ? 'Retry quote' : 'Getting quote…',
         action: 'quote' as const,
-        disabled: parsedAmount <= 0n || !market,
+        disabled: !quoteError || quoteLoading || parsedAmount <= 0n || !market,
       };
     }
     if (needsApproval)
@@ -1007,7 +1108,10 @@ export function BreakwaterConsole() {
     pendingSwap,
     parsedAmount,
     quote,
+    quoteLoading,
+    quoteError,
     wrongNetwork,
+    user,
   ]);
 
   const phaseLabel: Record<Exclude<AsyncPhase, 'idle'>, string> = {
@@ -1086,9 +1190,9 @@ export function BreakwaterConsole() {
               ? 'The taker console is ready; the Sepolia position and public manifest are the remaining commission step.'
               : !market
                 ? 'Checking the onchain position and guard before quoting. No market state is assumed while the read is pending.'
-              : isStressed
-                ? `The treasury will not accept more ${market?.badSymbol}. Only ${market?.goodSymbol} in → ${market?.badSymbol} out remains open.`
-                : 'Both directions follow the Aqua pegged curve while the observed ratio remains above the trigger.'}
+                : isStressed
+                  ? `The treasury will not accept more ${market?.badSymbol}. Only ${market?.goodSymbol} in → ${market?.badSymbol} out remains open.`
+                  : 'Both directions follow the Aqua pegged curve while the observed ratio remains above the trigger.'}
           </p>
         </section>
 
@@ -1255,8 +1359,8 @@ export function BreakwaterConsole() {
 
             <p className="action-help">
               You are the buyer: you receive the impaired asset at a discount
-              while the treasury reduces its holdings. This is not a
-              redemption or a guarantee that the asset will recover.
+              while the treasury reduces its holdings. This is not a redemption
+              or a guarantee that the asset will recover.
             </p>
 
             <div className="amount-field">
@@ -1268,6 +1372,7 @@ export function BreakwaterConsole() {
                   inputMode="decimal"
                   autoComplete="off"
                   value={amount}
+                  disabled={isBusy || !!pendingSwap}
                   onChange={(event) => {
                     setAmount(event.target.value);
                     setQuote(undefined);
@@ -1345,21 +1450,60 @@ export function BreakwaterConsole() {
                   connect,
                   switch: switchNetwork,
                   claim: claimDemoTokens,
-                  quote: getQuote,
+                  quote: refreshQuote,
                   approve,
                   swap,
                 };
                 void actions[primaryAction.action]();
               }}
               disabled={primaryAction.disabled || isBusy}
-              aria-busy={isBusy}
+              aria-busy={isBusy || quoteLoading}
               aria-describedby="primary-action-help"
             >
-              {isBusy && <LoaderCircle className="spin" aria-hidden="true" />}
+              {(isBusy || quoteLoading) && (
+                <LoaderCircle className="spin" aria-hidden="true" />
+              )}
               {isBusy
-                ? phaseLabel[phase as Exclude<AsyncPhase, 'idle'>]
+                ? transactionProgress?.stage === 'wallet'
+                  ? 'Confirm in your wallet…'
+                  : transactionProgress?.stage === 'submitted'
+                    ? 'Waiting for Sepolia confirmation…'
+                    : transactionProgress?.stage === 'confirmed'
+                      ? 'Confirmed — updating balances…'
+                      : phaseLabel[phase as Exclude<AsyncPhase, 'idle'>]
                 : primaryAction.label}
             </button>
+            <output className="action-help" aria-live="polite">
+              {quoteLoading
+                ? 'Updating quote automatically…'
+                : quoteError
+                  ? quoteError
+                  : quote
+                    ? 'Quote updates automatically. Minimum received and oracle-round protection apply.'
+                    : 'Quotes appear automatically once your wallet and amount are ready.'}
+            </output>
+            {quote && !isBusy && !pendingSwap && (
+              <button
+                className="text-action"
+                type="button"
+                onClick={refreshQuote}
+              >
+                Refresh quote
+              </button>
+            )}
+            {transactionProgress?.hash && deployment && (
+              <a
+                className="text-action"
+                href={`${deployment.explorerUrl}/tx/${transactionProgress.hash}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {transactionProgress.stage === 'confirmed'
+                  ? `Confirmed · detected after ${transactionProgress.seconds}s`
+                  : 'Transaction submitted · view on Etherscan'}
+                <ExternalLink aria-hidden="true" />
+              </a>
+            )}
             <p id="primary-action-help" className="action-help">
               {!isConfigured
                 ? 'The action unlocks when the Sepolia manifest is published.'
