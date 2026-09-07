@@ -1,0 +1,46 @@
+{
+  "chainId": 11155111,
+  "blockNumber": 11655522,
+  "blockHash": "0xf0d3ba2eae9c18bbf8213d0a0244b319ef40f5316d08ab69cecfa6720883a976",
+  "blockTimestamp": 1788800928,
+  "checkedAt": "2026-09-07T17:09:00.534Z",
+  "router": "0x353A054400d5855B8FCB1cbF448F13323d1DB17b",
+  "guard": "0x8846E2C70A59127Cc4AfB41f578D42055758232a",
+  "orderHash": "0xaa2ed9a5b631d3415bb2d79e2b8e97447fac7a2d1a5645a1c7115c5b5e00a30e",
+  "taker": "0xbad35FA6e368e90fC4faf63507F2D0A2Fdf94BAF",
+  "oracleCommitment": "0x0b61be011137c69d08d2aec6bba06ef180e03c014808cc89e9ac431300f6623d",
+  "ratioE18": "940000000000000000",
+  "triggerE18": "980000000000000000",
+  "codeHashes": {
+    "aqua": "0xd657c7c470aff4708c4da315fa1db5fe9784b1ec38b5d3f80b099506a0a75b18",
+    "router": "0xdd6a7901ae402b46dbf14d4c4f2201bc78b7457a089f04509f8b4ecc67ee5138",
+    "guard": "0xcace82010f38ef233fed27262683e32df1450ae3baf695912794265958d1797f"
+  },
+  "blocked": [
+    {
+      "method": "quote",
+      "tokenIn": "0x731024F4A60EBF718384D87F635960CabbE27D95",
+      "tokenOut": "0x84350B0b063F5E8f12d299aBfc9D3cab4188ea28",
+      "amountIn": "10000000",
+      "error": "ToxicDirectionBlocked",
+      "errorToken": "0x731024F4A60EBF718384D87F635960CabbE27D95",
+      "revertData": "0x685197a7000000000000000000000000731024f4a60ebf718384d87f635960cabbe27d95"
+    },
+    {
+      "method": "swap",
+      "tokenIn": "0x731024F4A60EBF718384D87F635960CabbE27D95",
+      "tokenOut": "0x84350B0b063F5E8f12d299aBfc9D3cab4188ea28",
+      "amountIn": "10000000",
+      "error": "ToxicDirectionBlocked",
+      "errorToken": "0x731024F4A60EBF718384D87F635960CabbE27D95",
+      "revertData": "0x685197a7000000000000000000000000731024f4a60ebf718384d87f635960cabbe27d95"
+    }
+  ],
+  "permittedQuote": {
+    "amountIn": "10000000",
+    "amountOut": "10691756",
+    "tokenIn": "0x84350B0b063F5E8f12d299aBfc9D3cab4188ea28",
+    "tokenOut": "0x731024F4A60EBF718384D87F635960CabbE27D95"
+  },
+  "scope": "Read-only eth_call on deployed Sepolia contracts at one pinned block. Fixed demo feeds and no-value test tokens. No transaction broadcast; no mined negative-path receipt."
+}

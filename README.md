@@ -13,8 +13,8 @@ at a bounded oracle-derived price.
 
 ## Status
 
-Breakwater passed its bounded ETHOnline 2026 sponsor spike and is now
-commissioning the public taker journey. Project-specific work began after the
+Breakwater's public Sepolia taker journey is live, with successful builder-operated
+swaps. Independent-user completion evidence is pending. Project-specific work began after the
 official kickoff at `2026-09-04T16:00:00Z`; this repository was initialized at
 `2026-09-04T17:04:11Z`.
 
@@ -27,9 +27,9 @@ The spike must prove:
 5. the Aqua virtual-balance invariant across both token orderings; and
 6. deterministic stale/invalid-feed and quote-to-execution behavior.
 
-Those claims reproduce in the local suite and on the pinned Ethereum fork. The
-remaining launch gate is a cold completion of the public quote → approve → swap
-journey.
+Those claims reproduce in the local suite and on the pinned Ethereum fork.
+The deployed Sepolia market also rejects toxic-direction quote and swap calls;
+the read-only reproduction below does not broadcast a failed transaction.
 
 ## Primary target
 
@@ -61,8 +61,8 @@ The captured block, feed rounds, quote, and Aqua balance deltas are recorded in
 [`evidence/mainnet-fork-2026-09-04.md`](evidence/mainnet-fork-2026-09-04.md).
 
 The taker console lives in [`web`](web) and reads the committed Sepolia market
-manifest. The intended public hostname is `https://breakwater.dolepee.com`;
-website access and an independent wallet completion remain launch checks:
+manifest. The public app is at https://breakwater.dolepee.com and automatically
+quotes before explicit approval and swap actions. To run locally:
 
 ```sh
 cd web
@@ -80,6 +80,21 @@ npm run build
 ```
 
 ## Taker safety contract
+
+Reproduce the deployed Sepolia guard check after installing root dependencies:
+
+```sh
+node scripts/verify-sepolia-guard.mjs 11655522
+```
+
+At that pinned block, both bUSD-in `quote` and `swap` calls revert with
+`ToxicDirectionBlocked(bUSD)`, while 10 rUSD quotes 10.691756 bUSD in the permitted
+direction. The script uses read-only `eth_call`, requires no key, and spends no
+gas. These are fixed demo feeds and no-value tokens, not a live-market safety
+claim or a mined rejection receipt. Results and deployed code hashes are in
+[`evidence/sepolia-guard-2026-09-07.json`](evidence/sepolia-guard-2026-09-07.json).
+Set `SEPOLIA_RPC_URL` to an archive-capable Sepolia endpoint if the default cannot
+serve the pinned block; omit the block argument to check current state.
 
 Before requesting the final executable quote, a taker must read
 `BreakwaterGuard.currentOracleCommitment()` and place that 32-byte value first
