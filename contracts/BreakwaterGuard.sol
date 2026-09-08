@@ -157,8 +157,8 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         // below the trigger must never be rounded into the healthy region.
         uint256 healthRatioE18 = Math.mulDiv(badUsdE18, _ONE, goodUsdE18);
 
-        // Preserve the upstream pegged curve while both assets remain inside the configured safety band.
-        if (healthRatioE18 >= TRIGGER_RATIO_E18) {
+        // Legacy policy is relative-only. Stricter policies override this hook.
+        if (_isHealthy(badUsdE18, goodUsdE18, healthRatioE18)) {
             return (updatedNextPC, choppedLength, updatedSwap);
         }
 
@@ -220,6 +220,10 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
     ///      closed. The taker must fetch a new commitment and requote.
     function currentOracleCommitment() external view returns (bytes32 commitment) {
         (,, commitment) = _readOracleState();
+    }
+
+    function _isHealthy(uint256, uint256, uint256 ratio) internal view virtual returns (bool) {
+        return ratio >= TRIGGER_RATIO_E18;
     }
 
     function _readOracleState() private view returns (

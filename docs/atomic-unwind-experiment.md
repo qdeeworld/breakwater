@@ -1,5 +1,9 @@
 # Atomic unwind experiment
 
+This note describes the initial September7 checkpoint. See the subsequent
+[safe direct comparator and USD policy](safe-direct-comparison.md) for the expanded
+benchmark and safety work; neither experiment is a public release.
+
 Experimental, not deployed or audited. This extends the existing position with one
 order-bound executor and one immutable USDC/USDT Uniswap V3 route. It does not add
 healthy fees, a maker interface, an independent reserve-health check, or a running solver.
