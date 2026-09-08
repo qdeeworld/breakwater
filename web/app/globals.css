@@ -1,5 +1,252 @@
 @import 'tailwindcss';
 
+.maker-shell :is(h1, h2, h3) {
+  text-wrap: balance;
+}
+.maker-shell p {
+  text-wrap: pretty;
+}
+.maker-metrics dd {
+  font-variant-numeric: tabular-nums;
+}
+.maker-cancel-dialog {
+  max-width: min(480px, calc(100% - 32px));
+  padding: 24px;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  background: var(--foam);
+  color: var(--primary);
+  overscroll-behavior: contain;
+}
+.maker-cancel-dialog::backdrop {
+  background: rgba(7, 42, 64, 0.45);
+}
+
+.maker-panel {
+  padding: 24px;
+}
+.maker-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+.maker-fields label {
+  display: grid;
+  gap: 8px;
+}
+.maker-fields input,
+.maker-fields select {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--steel);
+  border-radius: 4px;
+  background: var(--foam);
+  color: var(--primary);
+  font: inherit;
+}
+.maker-shell select:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+.maker-shell :is(button, a, input, select):focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+.maker-shell :is(h2, h3) {
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+.maker-shell h2 {
+  margin: 0 0 16px;
+  font-size: 32px;
+}
+.maker-shell h3 {
+  font-size: 24px;
+}
+.maker-status {
+  display: block;
+  min-height: 24px;
+  margin-bottom: 8px;
+}
+.maker-address {
+  font-family: var(--font-data);
+  font-size: 13px;
+}
+.maker-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+  margin: 16px 0 24px;
+}
+.maker-nav label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.maker-nav select {
+  min-height: 44px;
+  padding: 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--foam);
+  border: 1px solid var(--steel);
+  border-radius: 4px;
+}
+.maker-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.maker-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 24px 0;
+}
+.maker-metrics > div {
+  min-width: 0;
+  border-top: 1px solid var(--steel);
+  padding: 16px 8px 16px 0;
+}
+.maker-metrics dt {
+  font-size: 13px;
+}
+.maker-metrics dd {
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-data);
+  font-size: clamp(18px, 2vw, 26px);
+}
+.maker-metrics small {
+  display: block;
+  margin-top: 8px;
+}
+.maker-gate {
+  padding: 8px 16px;
+  border: 1px solid var(--steel);
+  border-left: 4px solid var(--primary);
+  background: var(--fog);
+}
+.maker-gate p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.maker-share {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0;
+}
+.maker-share input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px;
+  color: inherit;
+  border: 1px solid var(--steel);
+  border-radius: 4px;
+  background: var(--foam);
+  font-family: var(--font-data);
+  font-size: 16px;
+}
+.maker-shell .notice {
+  display: block;
+}
+.maker-shell .position-panel,
+.maker-shell .trade-ticket {
+  order: initial;
+  min-width: 0;
+}
+.maker-shell .wordmark-mark {
+  display: grid;
+}
+.maker-shell code {
+  overflow-wrap: anywhere;
+}
+.maker-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+.maker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.maker-actions button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  color: var(--primary);
+  background: var(--foam);
+  font: inherit;
+  cursor: pointer;
+}
+.maker-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.maker-actions .primary-action {
+  color: var(--foam);
+  background: var(--primary);
+}
+.maker-section {
+  border-top: 1px solid var(--steel);
+  margin-top: 24px;
+  padding-top: 8px;
+}
+.maker-faucet {
+  border-top: 1px solid var(--steel);
+  margin-top: 32px;
+  padding: 24px 0;
+}
+.maker-receipt-link a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+@media (forced-colors: active) {
+  .maker-shell :is(button, a, input, select):focus-visible {
+    outline-color: Highlight;
+  }
+}
+@media (max-width: 720px) {
+  .maker-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+@media (max-width: 720px) {
+  .maker-shell .topbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .maker-shell .topbar-actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .maker-shell .network-chip {
+    display: inline-flex;
+    font-size: 12px;
+  }
+}
+@media (max-width: 420px) {
+  .maker-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .maker-shell .topbar-actions {
+    flex-wrap: wrap;
+  }
+  .maker-shell .topbar {
+    align-items: flex-start;
+  }
+}
+
 :root {
   --fog: #eaf2f5;
   --primary: #072a40;
