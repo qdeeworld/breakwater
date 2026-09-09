@@ -27,6 +27,7 @@ import {
   type Hex,
 } from 'viem';
 import { sepolia } from 'viem/chains';
+import { ensureAllocationAllowance } from '@/lib/allocation-approval';
 import {
   buildTakerTraits,
   describeError,
@@ -591,12 +592,30 @@ export function TreasuryConsole() {
         : position.shipped
           ? position.reserveBalance
           : position.reserveAllocation;
-      await transact({
-        address: assetSide ? d.badToken : d.goodToken,
-        abi: erc20Abi,
-        functionName: 'approve',
-        args: [d.aqua, value],
-      });
+      const token = assetSide ? d.badToken : d.goodToken;
+      const aqua = d.aqua;
+      const w = await wallet();
+      const changed = await ensureAllocationAllowance(
+        value,
+        () =>
+          makerClient.readContract({
+            address: token,
+            abi: erc20Abi,
+            functionName: 'allowance',
+            args: [w.account.address, aqua],
+          }),
+        (approval) =>
+          transact({
+            address: token,
+            abi: erc20Abi,
+            functionName: 'approve',
+            args: [aqua, approval],
+          }),
+      );
+      if (!changed)
+        setStatus(
+          'Existing Aqua allowance already covers this allocation. It was left unchanged.',
+        );
     });
   const ship = () =>
     run('Shipping position to Aqua', async () => {

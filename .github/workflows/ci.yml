@@ -42,5 +42,7 @@ jobs:
         run: npm audit --omit=dev
       - name: Lint
         run: npm run lint
+      - name: Frontend regression tests
+        run: npm test
       - name: Build
         run: npm run build
