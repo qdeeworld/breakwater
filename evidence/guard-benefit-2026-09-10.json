@@ -104,6 +104,28 @@
         "fees": "0",
         "markedReserveValue": "199994607247",
         "changeFromInitialMark": "0"
+      },
+      "ownerDirect": {
+        "action": "same-healthy-policy",
+        "quoteOutput": "9967520284",
+        "sourceGas": "146689",
+        "fillGas": "390132",
+        "gasBudgetReserve": "26053621",
+        "takerProfitReserve": "-63001513",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "100000000000",
+        "virtualReserve": "100000000000",
+        "fees": "0",
+        "markedReserveValue": "199994607247",
+        "changeFromInitialMark": "0"
       }
     },
     {
@@ -212,6 +234,19 @@
         "virtualReserve": "0",
         "fees": "0",
         "markedReserveValue": "194082651683"
+      },
+      "ownerDirect": {
+        "action": "owner-funded-bounded-exit",
+        "grossProceeds": "9406566736",
+        "executionGas": "339156",
+        "gasBudgetReserve": "126022035",
+        "asset": "90000000000",
+        "reserve": "109406566736",
+        "virtualAsset": "0",
+        "virtualReserve": "0",
+        "fees": "0",
+        "markedReserveValue": "193985056077",
+        "changeFromInitialMark": "-131067674"
       },
       "guardedExit": {
         "action": "unavailable-after-gas",
@@ -334,6 +369,17 @@
         "fees": "0",
         "markedReserveValue": "187086891660"
       },
+      "ownerDirect": {
+        "action": "halted-exit-unavailable",
+        "executionGas": "90081",
+        "gasBudgetReserve": "46826880",
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "0",
+        "virtualReserve": "0",
+        "fees": "0",
+        "markedReserveValue": "187086891660"
+      },
       "guardedExit": {
         "action": "unavailable-before-gas",
         "floor": "8734218187",
@@ -428,6 +474,28 @@
         "changeFromInitialMark": "-99211972"
       },
       "direct": {
+        "action": "same-healthy-policy",
+        "quoteOutput": "9967520284",
+        "sourceGas": "146739",
+        "fillGas": "390132",
+        "gasBudgetReserve": "17947684",
+        "takerProfitReserve": "76315099",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "110000000000",
+        "reserve": "90032479716",
+        "virtualAsset": "110000000000",
+        "virtualReserve": "90032479716",
+        "fees": "30000000",
+        "markedReserveValue": "198583871145",
+        "changeFromInitialMark": "-99211972"
+      },
+      "ownerDirect": {
         "action": "same-healthy-policy",
         "quoteOutput": "9967520284",
         "sourceGas": "146739",

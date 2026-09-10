@@ -161,6 +161,18 @@ suite('Guard benefit: matched independent historical checkpoints',function(){
         row.direct={action:'halted-exit-unavailable',executionGas:cancelled.gasUsed,gasBudgetReserve:budget(cancelled.gasUsed)};
       }else{
         await next();const tx=await(await treasury.directExit(order,order,SIZE,0,deadline,commitment,false)).wait();
+        // A zero-delay owner who can pay cancellation gas can also pay exit gas
+        // separately. Preserve this feasible route even if a self-funded keeper
+        // cannot meet the same gross treasury floor after compensation.
+        const ownerState=await state(),ownerGas=budget(tx.gasUsed);
+        expect(ownerState.asset).equal(INITIAL-SIZE);
+        expect(ownerState.reserve).equal(INITIAL+trial);
+        expect(ownerState.virtualAsset).equal(0n);
+        expect(ownerState.virtualReserve).equal(0n);
+        row.ownerDirect={action:'owner-funded-bounded-exit',grossProceeds:trial,
+          executionGas:tx.gasUsed,gasBudgetReserve:ownerGas,...ownerState,
+          markedReserveValue:marketMarked(ownerState.asset,ownerState.reserve)-ownerGas};
+        row.ownerDirect.changeFromInitialMark=row.ownerDirect.markedReserveValue-initialValue;
         const reward=budget(tx.gasUsed)+UNIT;await reset();
         const paidPossible=await treasury.directExit.staticCall(order,order,SIZE,reward,deadline,commitment,false).then(()=>true,()=>false);
         if(paidPossible){
@@ -180,6 +192,9 @@ suite('Guard benefit: matched independent historical checkpoints',function(){
       row.direct.markedReserveValue=marketMarked(row.direct.asset,row.direct.reserve)
         -(row.direct.keeperReward?0n:row.direct.gasBudgetReserve);
     }else Object.assign(row.direct,row.guarded,{action:'same-healthy-policy'});
+    // Where no owner-funded bounded exit exists, retain the same immediate
+    // cancellation fallback. Healthy rows remain independent initial states.
+    row.ownerDirect??={...row.direct};
     await reset();
     // Optional standing-order exit: measure the existing callback without changing
     // its product role. Count only gas-covering external resale, never a subsidized taker.

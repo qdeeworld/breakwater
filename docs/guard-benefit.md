@@ -47,12 +47,12 @@ complete setup/authorization cost comparison.
 
 USDT-equivalent change from equal starting inventory at each checkpoint's mark:
 
-| UTC checkpoint / block | Guarded | Unguarded | Immediate halt/direct alternative |
-|---|---|---|---|
-| Mar 9 23:59:59 / 16794061 | No gas-covering inflow; 0 | Same; 0 | Same healthy policy; 0 |
-| Mar 11 03:59:59 / 16802331 | Refuses input; 0 | −555.907909 | Cancels; −33.472068 gas budget |
-| Mar 11 07:59:59 / 16803515 | Refuses input; 0 | −1,254.148430 | Cancels; −46.826880 gas budget |
-| Mar 13 11:59:59 / 16818931 | Allows input; −99.211972 | Same; −99.211972 | Independent healthy checkpoint; same trade |
+| UTC checkpoint / block | Guarded | Unguarded | Owner-funded direct exit | Immediate cancellation / compensated-keeper path |
+|---|---|---|---|---|
+| Mar 9 23:59:59 / 16794061 | No gas-covering inflow; 0 | Same; 0 | Same healthy policy; 0 | Same healthy policy; 0 |
+| Mar 11 03:59:59 / 16802331 | Refuses input; 0 | −555.907909 | Sells 10,000 USDC; −131.067674 after gas budget | Cancels; −33.472068 gas budget |
+| Mar 11 07:59:59 / 16803515 | Refuses input; 0 | −1,254.148430 | Bounded exit unavailable; cancels, −46.826880 | Cancels; −46.826880 gas budget |
+| Mar 13 11:59:59 / 16818931 | Allows input; −99.211972 | Same; −99.211972 | Independent healthy checkpoint; same trade | Independent healthy checkpoint; same trade |
 
 Each stressed unguarded fill acquires 10,000 USDC and pays 9,967.520284 USDT;
 accounted fees are 30 USDC, included in balances. Counterparty profits after gas
@@ -60,15 +60,23 @@ headroom are 349.249765 and 962.257685 USDT. The guard prevents that *additional
 acquisition but does not rescue original inventory: the original 100,000 USDC is
 already marked 5,883.88 and 12,866.28 USDT below parity at those stress checkpoints.
 
-Immediate cancellation also prevents acquisition. The existing bounded direct
-executor cannot pay the same treasury floor and adequate keeper compensation at
-either stress point. Cancellation consumes 90,081 gas. The fallback cancel in this
+Immediate cancellation also prevents acquisition. A keeper funded solely from sale
+proceeds cannot meet the treasury floor plus compensation at either stress point.
+However, the owner can fund gas separately at the first stress checkpoint and
+execute the same bounded direct sale: receive 9,406.566736 USDT, reduce USDC to
+90,000, and pay a 126.022035-USDT gas budget (339,156 gas). Its gross treasury
+floor is met, even though the after-gas value is lower. This owner-funded route
+is retained as `ownerDirect` in the raw data; `direct` records the compensated
+keeper/cancellation branch. Neither gas nor token proceeds are counted twice.
+
+Cancellation consumes 90,081 gas. The fallback cancel in this
 harness is owner-authorized; it is granted zero delay and no extra authorization
 cost as a strong economic control, not presented as a fully implemented autonomous
 keeper-cancel workflow. Its modeled cost is not a universal Breakwater saving.
 
-The existing optional atomic route is likewise unavailable after gas at both
-stressed checkpoints. This is one route/size, not an estimate of all exit liquidity.
+The existing optional atomic route is unavailable after gas at both stressed
+checkpoints, unlike the feasible owner-funded direct sale at the first checkpoint.
+This is one route/size, not an estimate of all exit liquidity.
 No better-proceeds, guaranteed-exit or unique-continuity claim follows.
 
 ## Recovery and delayed observations
@@ -80,6 +88,14 @@ refusal forgoes that upside. This includes curve effects and fees, not just fees
 Break-even mark is 0.9967520284 before further transaction costs. These are
 held-inventory valuation sensitivities, not executed future sales. The independent
 recovery row does not assume a previously cancelled position restarts for free.
+
+The first-stress **owner-funded exit** has the opposite exposure tradeoff. Holding
+its resulting balances and already-incurred gas cost, at the deeper trough mark
+its incremental value relative to unchanged starting inventory is +567.172847
+USDT. At the recorded recovery mark it is −587.763610 USDT; at hypothetical parity,
+−719.455299 USDT. Cancellation retains the original exposure and costs 33.472068
+USDT at the first checkpoint. These are comparable held-balance sensitivities,
+not extra executed future trades or a retrospective choice of the best action.
 
 At recovery, the accepted asset observation passes the 0.98 policy, so a trade
 earns 30 USDC in fees while reducing marked treasury value by 99.21 USDT.
