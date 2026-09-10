@@ -59,6 +59,15 @@ security audit, or independently verified user adoption to Qdee. Codex-assisted
 review and automated tests do not replace those activities. The organizer
 determines whether the documented human contribution meets event eligibility.
 
+### September 10 discovery extension
+
+At Qdee's direction, Codex implemented `web/app/positions/page.tsx`,
+`web/lib/discovery.ts`, `web/lib/position-status.ts`,
+`web/test/position-status.test.mjs`, and the related treasury-statement,
+stylesheet and documentation changes. Public competitor research informed the
+product scope; no competitor implementation was copied. Live event queries and
+local browser checks are engineering validation, not independent customer use.
+
 ## Reused material and development records
 
 The project imported 1inch's official `swap-vm-template` at `ad719fc`, then

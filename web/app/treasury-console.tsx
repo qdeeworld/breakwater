@@ -953,6 +953,9 @@ export function TreasuryConsole() {
           </p>
         )}
         <nav className="maker-nav" aria-label="Treasury actions">
+          <Link className="text-action" href="/positions">
+            Find liquidity
+          </Link>
           <button className="text-action" onClick={() => setShowCreate(true)}>
             Create position
           </button>
@@ -1168,11 +1171,11 @@ export function TreasuryConsole() {
                   </p>
                   <dl className="maker-metrics">
                     <div>
-                      <dt>Asset allocated · bUSD</dt>
+                      <dt>Remaining allocation · bUSD</dt>
                       <dd>{tokens(position.assetBalance)}</dd>
                     </div>
                     <div>
-                      <dt>Reserve allocated · rUSD</dt>
+                      <dt>Remaining allocation · rUSD</dt>
                       <dd>{tokens(position.reserveBalance)}</dd>
                     </div>
                     <div>
@@ -1197,6 +1200,40 @@ export function TreasuryConsole() {
                     APY or total profit. Inventory remains exposed to asset
                     prices. {position.accounting[2].toString()} healthy trades ·{' '}
                     {position.accounting[3].toString()} exits.
+                  </p>
+                  <p className="action-help">
+                    Self-trades do not establish outside revenue or reduced
+                    total wallet exposure. Fees and exit proceeds are historical
+                    flows, not extra balances to add to the remaining
+                    allocation.
+                  </p>
+                  <dl
+                    className="maker-metrics"
+                    aria-label="Physical wallet backing"
+                  >
+                    <div>
+                      <dt>Owner wallet · bUSD</dt>
+                      <dd>{tokens(position.assetWallet)}</dd>
+                    </div>
+                    <div>
+                      <dt>Owner wallet · rUSD</dt>
+                      <dd>{tokens(position.reserveWallet)}</dd>
+                    </div>
+                    <div>
+                      <dt>Backed output · bUSD</dt>
+                      <dd>{tokens(position.assetAvailable)}</dd>
+                    </div>
+                    <div>
+                      <dt>Backed output · rUSD</dt>
+                      <dd>{tokens(position.reserveAvailable)}</dd>
+                    </div>
+                  </dl>
+                  <p className="action-help">
+                    At block {position.blockNumber.toString()}. Backed output is
+                    capped by this allocation, wallet balance and Aqua
+                    allowance. It is shared backing, not reserved liquidity or
+                    guaranteed proceeds. Other strategies and wallet transfers
+                    can change it.
                   </p>
                   <div
                     className="maker-gate"
