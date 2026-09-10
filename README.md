@@ -15,18 +15,25 @@ available. Execution is not guaranteed; the discount is not a total-loss cap.
 
 ## Status
 
-The core owner lifecycle is implemented on this branch and undergoing release
-validation: creation, policy/allocation, approvals/shipment, explicit healthy fees,
+The core owner lifecycle is live on [Sepolia](https://breakwater.dolepee.com):
+creation, policy/allocation, approvals/shipment, explicit healthy fees,
 stress/refusal/halt states, actual exit proceeds and cancellation. See
 [`docs/treasury-product.md`](docs/treasury-product.md) for accounting and safety limits.
-This is not yet a claim that the new owner release is publicly deployed.
+The public console uses no-value tokens and owner-controlled sample prices,
+not live market feeds. This is a testnet prototype, not an audited production system.
 
-Breakwater's earlier public Sepolia taker journey is live, with successful builder-operated
-swaps. Independent-user completion evidence is pending. Project-specific work began after the
+Builder-assisted owner creation, activation, healthy self-settlement, stressed
+exit, reserve/co-depeg halts and cancellation were observed in the Sepolia
+[owner walkthrough](evidence/owner-ui-sepolia-2026-09-09.json). Its separate order
+and transaction links are recorded there; the earlier scripted sample was left active.
+Self-trades verify settlement and the fee ledger, not independent revenue or
+reduced aggregate wallet exposure. The earlier public taker journey remains at
+[/trade](https://breakwater.dolepee.com/trade). Independent-user completion evidence
+is pending. Project-specific work began after the
 official kickoff at `2026-09-04T16:00:00Z`; this repository was initialized at
 `2026-09-04T17:04:11Z`.
 
-The spike must prove:
+The original guard validation covers:
 
 1. an official Aqua/SwapVM token transfer;
 2. a healthy two-way quote and swap;
@@ -68,9 +75,9 @@ npx -y yarn@1.22.22 test:fork
 The captured block, feed rounds, quote, and Aqua balance deltas are recorded in
 [`evidence/mainnet-fork-2026-09-04.md`](evidence/mainnet-fork-2026-09-04.md).
 
-The owner console lives in [`web`](web); its release manifest is separate from the
-earlier market manifest. Until configured, it explicitly disables owner creation.
-The previous taker console is retained at `/trade` on this branch. Both use automatic
+The owner console lives in [`web`](web); its configured release manifest is separate
+from the earlier market manifest. Missing configuration disables owner creation.
+The previous taker console is retained at `/trade`. Both use automatic
 quotes before explicit approval and swap actions. The existing public deployment
 is at https://breakwater.dolepee.com. To run locally:
 
@@ -86,6 +93,7 @@ Its production dependency audit, lint, and build can be reproduced with:
 cd web
 npm audit --omit=dev
 npm run lint
+npm test
 npm run build
 ```
 

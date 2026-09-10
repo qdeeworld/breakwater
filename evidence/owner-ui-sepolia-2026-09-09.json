@@ -1,0 +1,38 @@
+{
+  "chainId": 11155111,
+  "source": "Builder-assisted browser walkthrough: application controls operated by the coding agent; wallet confirmations handled by the owner. Receipt links and confirmed accounting states observed in the application.",
+  "orderHash": "0xe81dd9c7aa5e054272e0eead2d9e28b8c1af7a9893adfd0e6ef98e28c20951c5",
+  "distinctFromEarlierSample": "The September 8 scripted sample bace8071...e2c83b was left active. This is a different owner-created order.",
+  "transactions": {
+    "create": "0xf03055dad2fadcf813999ad3597526c565a5d0d12598658a1a0dd6842e9e69fa",
+    "ship": "0xfb34b1c5f16a0481d0fa77eb5d078e7a4eb7432ed4574874ae7791903aa3e259",
+    "healthyTrade": "0x7f2c291d5f3fa0eb60a5fbb04f95a80e2e69e58b2d038bc9dbf575826aa65f3f",
+    "assetStressed": "0x6d97abaa38dee92384941ab2902e7798393d6f8cf9a3b586dd837dd4c4bc158c",
+    "exit": "0xffdc7819e97846e4f3db9e182c13cb9a30b351bb0ee3154f0f15b3d1bba1744f",
+    "reserveUnsafe": "0xe37372d2a71a4f80278ef2a7e485ebfbfe1e65420b282ba7f44a86e6a98d50aa",
+    "bothUnsafe": "0xb16215832fb3c3a5343da12ae9ecc17229153fdde80c355066b06185237b5840",
+    "cancel": "0x7119a2f712f8619ee9f93792add74cb1f2b1fcc0ae8eeb0f8814617a707c5186"
+  },
+  "observedFinalState": {
+    "status": "Cancelled",
+    "assetAllocation": "0",
+    "reserveAllocation": "0",
+    "healthyFeeBUSD": "0.003",
+    "assetExitedBUSD": "1.069175",
+    "exitProceedsRUSD": "1"
+  },
+  "cancellationReceiptRecheck": {
+    "checkedOn": "2026-09-10",
+    "method": "viem Sepolia default public RPC getTransactionReceipt",
+    "status": "success",
+    "blockNumber": "11669269",
+    "from": "0xbad35fa6e368e90fc4faf63507f2d0a2fdf94baf",
+    "to": "0x467a6b40bed9e54536e4d5549744727ccdd594fe"
+  },
+  "limitations": [
+    "Self-trades verify settlement and ledger updates, not independent revenue or reduced aggregate owner exposure.",
+    "Reserve/co-depeg refusal was observed in the UI; no failing transaction was broadcast for those checks.",
+    "Cancellation removes this order's virtual allocation, not the token-wide Aqua approvals.",
+    "Only the cancellation receipt was independently re-fetched for this report; other entries record application-observed confirmations."
+  ]
+}
