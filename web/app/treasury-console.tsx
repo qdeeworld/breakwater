@@ -28,6 +28,7 @@ import {
 } from 'viem';
 import { sepolia } from 'viem/chains';
 import { ensureAllocationAllowance } from '@/lib/allocation-approval';
+import { switchToSepolia } from '@/lib/wallet-network';
 import {
   buildTakerTraits,
   describeError,
@@ -497,12 +498,11 @@ export function TreasuryConsole() {
   const switchNetwork = () =>
     run('Switching network', async () => {
       const p = provider();
-      if (!p) return;
-      await p.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0xaa36a7' }],
-      });
-      setChain(sepolia.id);
+      if (!p)
+        throw new Error(
+          'Open this page in your Ethereum wallet browser or connect a wallet extension.',
+        );
+      setChain(await switchToSepolia(p, setStatus));
     });
   const disconnect = () => {
     setAccount(undefined);
@@ -943,7 +943,9 @@ export function TreasuryConsole() {
               onClick={() => void switchNetwork()}
             >
               Switch to Sepolia
-            </button>
+            </button>{' '}
+            No prompt? Open your wallet and check pending requests, or enable
+            test networks and select Sepolia there.
           </p>
         )}
         {!d && (

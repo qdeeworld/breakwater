@@ -30,6 +30,7 @@ import {
   type Hex,
 } from 'viem';
 import { sepolia } from 'viem/chains';
+import { switchToSepolia } from '@/lib/wallet-network';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -641,14 +642,22 @@ export function BreakwaterConsole() {
       setPhase('switching');
       setTransactionProgress(undefined);
       setNotice(undefined);
-      await getWallet().switchChain({ id: TARGET_CHAIN_ID });
-      setWalletChainId(TARGET_CHAIN_ID);
+      const ethereum = getEthereum();
+      if (!ethereum)
+        throw new Error(
+          'Open this page in your Ethereum wallet browser or connect a wallet extension.',
+        );
+      setWalletChainId(
+        await switchToSepolia(ethereum, (message) =>
+          setNotice({ tone: 'info', message }),
+        ),
+      );
     } catch (error) {
       setNotice({ tone: 'error', message: describeError(error) });
     } finally {
       setPhase('idle');
     }
-  }, [getWallet]);
+  }, []);
 
   const parsedAmount = useMemo(() => {
     if (!market) return 0n;
