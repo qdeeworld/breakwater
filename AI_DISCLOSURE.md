@@ -68,6 +68,14 @@ stylesheet and documentation changes. Public competitor research informed the
 product scope; no competitor implementation was copied. Live event queries and
 local browser checks are engineering validation, not independent customer use.
 
+### September 10 wallet-network repair
+
+After an external tester reported that switching to Sepolia produced no add-network
+prompt, Codex added the missing-network fallback and verified-chain checks in
+`web/lib/wallet-network.ts`, integrated both trading surfaces, added actionable
+wallet-status messages, and wrote `web/test/wallet-network.test.mjs`. These mocked
+provider tests do not establish compatibility with the tester's specific wallet.
+
 ## Reused material and development records
 
 The project imported 1inch's official `swap-vm-template` at `ad719fc`, then
