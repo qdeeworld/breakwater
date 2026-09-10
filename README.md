@@ -23,7 +23,9 @@ The public console uses no-value tokens and owner-controlled sample prices,
 not live market feeds. This is a testnet prototype, not an audited production system.
 
 Builder-assisted owner creation, activation, healthy self-settlement, stressed
-exit, reserve/co-depeg halts and cancellation have been exercised on Sepolia.
+exit, reserve/co-depeg halts and cancellation were observed in the Sepolia
+[owner walkthrough](evidence/owner-ui-sepolia-2026-09-09.json). Its separate order
+and transaction links are recorded there; the earlier scripted sample was left active.
 Self-trades verify settlement and the fee ledger, not independent revenue or
 reduced aggregate wallet exposure. The earlier public taker journey remains at
 [/trade](https://breakwater.dolepee.com/trade). Independent-user completion evidence
