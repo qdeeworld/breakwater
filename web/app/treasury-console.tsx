@@ -890,7 +890,7 @@ export function TreasuryConsole() {
             </a>
           </p>
         )}
-        {readError && (
+        {!showCreate && readError && (
           <p className="notice error" role="alert">
             {readError}
           </p>
