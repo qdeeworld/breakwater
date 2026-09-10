@@ -21,10 +21,18 @@
     "assetExitedBUSD": "1.069175",
     "exitProceedsRUSD": "1"
   },
+  "cancellationReceiptRecheck": {
+    "checkedOn": "2026-09-10",
+    "method": "viem Sepolia default public RPC getTransactionReceipt",
+    "status": "success",
+    "blockNumber": "11669269",
+    "from": "0xbad35fa6e368e90fc4faf63507f2d0a2fdf94baf",
+    "to": "0x467a6b40bed9e54536e4d5549744727ccdd594fe"
+  },
   "limitations": [
     "Self-trades verify settlement and ledger updates, not independent revenue or reduced aggregate owner exposure.",
     "Reserve/co-depeg refusal was observed in the UI; no failing transaction was broadcast for those checks.",
     "Cancellation removes this order's virtual allocation, not the token-wide Aqua approvals.",
-    "This records application-observed confirmation, not an independently re-fetched receipt audit."
+    "Only the cancellation receipt was independently re-fetched for this report; other entries record application-observed confirmations."
   ]
 }
