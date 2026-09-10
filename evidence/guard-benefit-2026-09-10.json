@@ -1,0 +1,454 @@
+{
+  "kind": "local fork counterfactual; independent checkpoints; labelled synthetic lag sensitivity",
+  "rows": [
+    {
+      "phase": "pre-shock",
+      "block": 16794061,
+      "blockHash": "0x58a4b7c7fb0f7e0757de582730dbff58563cf1468dba52934d3ac53c097edc6a",
+      "headerTimestamp": 1678406399,
+      "executionTimestamp": 1678406418,
+      "feeds": {
+        "asset": {
+          "address": "0x8fffffd4afb6115b954bd326cbe7b4ba576818f6",
+          "round": "36893488147419104087",
+          "answer": "100000000",
+          "updatedAt": "1678341635",
+          "age": "64764"
+        },
+        "reserve": {
+          "address": "0x3e7d1eab13ad0104d2750b8863b489d65364e32d",
+          "round": "36893488147419104056",
+          "answer": "99990000",
+          "updatedAt": "1678393631",
+          "age": "12768"
+        },
+        "eth": {
+          "address": "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
+          "round": "92233720368547800310",
+          "answer": "143925530000",
+          "updatedAt": "1678406123",
+          "age": "276"
+        }
+      },
+      "marketRatioE18": "999946072470558287",
+      "gasPriceWei": "28098007542",
+      "setupArmGas": "236080",
+      "initialAsset": "100000000000",
+      "initialReserve": "100000000000",
+      "tradeSize": "10000000000",
+      "externalAcquisitionCost": "10004468176",
+      "policyHealthy": true,
+      "strictOneHourEligible": false,
+      "guarded": {
+        "action": "no-gas-covering-inflow",
+        "quoteOutput": "9967520284",
+        "sourceGas": "146689",
+        "fillGas": "390132",
+        "gasBudgetReserve": "26053621",
+        "takerProfitReserve": "-63001513",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "100000000000",
+        "virtualReserve": "100000000000",
+        "fees": "0",
+        "markedReserveValue": "199994607247",
+        "changeFromInitialMark": "0"
+      },
+      "unguarded": {
+        "action": "no-gas-covering-inflow",
+        "quoteOutput": "9967520284",
+        "sourceGas": "146689",
+        "fillGas": "388010",
+        "gasBudgetReserve": "25950609",
+        "takerProfitReserve": "-62898501",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "100000000000",
+        "virtualReserve": "100000000000",
+        "fees": "0",
+        "markedReserveValue": "199994607247",
+        "changeFromInitialMark": "0"
+      },
+      "direct": {
+        "action": "same-healthy-policy",
+        "quoteOutput": "9967520284",
+        "sourceGas": "146689",
+        "fillGas": "390132",
+        "gasBudgetReserve": "26053621",
+        "takerProfitReserve": "-63001513",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "100000000000",
+        "virtualReserve": "100000000000",
+        "fees": "0",
+        "markedReserveValue": "199994607247",
+        "changeFromInitialMark": "0"
+      }
+    },
+    {
+      "phase": "stress",
+      "block": 16802331,
+      "blockHash": "0xd701fd1a80d39f8de2070b0fd3bb68402f17176d0c53a8892a28d50c80201c9a",
+      "headerTimestamp": 1678507199,
+      "executionTimestamp": 1678507218,
+      "feeds": {
+        "asset": {
+          "address": "0x8fffffd4afb6115b954bd326cbe7b4ba576818f6",
+          "round": "36893488147419104125",
+          "answer": "94594839",
+          "updatedAt": "1678507127",
+          "age": "72"
+        },
+        "reserve": {
+          "address": "0x3e7d1eab13ad0104d2750b8863b489d65364e32d",
+          "round": "36893488147419104063",
+          "answer": "100640000",
+          "updatedAt": "1678504439",
+          "age": "2760"
+        },
+        "eth": {
+          "address": "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
+          "round": "92233720368547800401",
+          "answer": "146910000000",
+          "updatedAt": "1678506983",
+          "age": "216"
+        }
+      },
+      "marketRatioE18": "941161237511895769",
+      "gasPriceWei": "212121236636",
+      "setupArmGas": "236080",
+      "initialAsset": "100000000000",
+      "initialReserve": "100000000000",
+      "tradeSize": "10000000000",
+      "externalAcquisitionCost": "9416660903",
+      "policyHealthy": false,
+      "strictOneHourEligible": true,
+      "guarded": {
+        "action": "impaired-inflow-refused",
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "100000000000",
+        "virtualReserve": "100000000000",
+        "fees": "0",
+        "markedReserveValue": "194116123751"
+      },
+      "unguarded": {
+        "action": "rational-inflow-executed",
+        "quoteOutput": "9967520284",
+        "sourceGas": "154571",
+        "fillGas": "388010",
+        "gasBudgetReserve": "201609616",
+        "takerProfitReserve": "349249765",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "110000000000",
+        "reserve": "90032479716",
+        "virtualAsset": "110000000000",
+        "virtualReserve": "90032479716",
+        "fees": "30000000",
+        "markedReserveValue": "193560215842",
+        "changeFromInitialMark": "-555907909"
+      },
+      "delaySensitivity": {
+        "kind": "synthetic accepted $1/$1 observations, not historical feed data",
+        "updatedAt": 1678506918,
+        "executionTimestamp": 1678507223
+      },
+      "delayedGuard": {
+        "action": "rational-inflow-executed",
+        "quoteOutput": "9967520284",
+        "sourceGas": "154571",
+        "fillGas": "370882",
+        "gasBudgetReserve": "195245161",
+        "takerProfitReserve": "355614220",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "110000000000",
+        "reserve": "90032479716",
+        "virtualAsset": "110000000000",
+        "virtualReserve": "90032479716",
+        "fees": "30000000",
+        "markedReserveValue": "193560215842",
+        "changeFromInitialMark": "-555907909"
+      },
+      "direct": {
+        "action": "halted-exit-net-floor-unavailable",
+        "executionGas": "90081",
+        "gasBudgetReserve": "33472068",
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "0",
+        "virtualReserve": "0",
+        "fees": "0",
+        "markedReserveValue": "194082651683"
+      },
+      "guardedExit": {
+        "action": "unavailable-after-gas",
+        "floor": "9352331559",
+        "executionGas": "618048",
+        "gasBudgetReserve": "229651120",
+        "solverProfitReserve": "-175415943",
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "100000000000",
+        "virtualReserve": "100000000000",
+        "fees": "0",
+        "markedReserveValue": "194116123751"
+      }
+    },
+    {
+      "phase": "trough-window",
+      "block": 16803515,
+      "blockHash": "0x8f93de39b45544b039cadd1285115a56a2d2693df7f854f87e24d92ecd573302",
+      "headerTimestamp": 1678521599,
+      "executionTimestamp": 1678521618,
+      "feeds": {
+        "asset": {
+          "address": "0x8fffffd4afb6115b954bd326cbe7b4ba576818f6",
+          "round": "36893488147419104216",
+          "answer": "88330000",
+          "updatedAt": "1678521203",
+          "age": "396"
+        },
+        "reserve": {
+          "address": "0x3e7d1eab13ad0104d2750b8863b489d65364e32d",
+          "round": "36893488147419104065",
+          "answer": "100625320",
+          "updatedAt": "1678518095",
+          "age": "3504"
+        },
+        "eth": {
+          "address": "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
+          "round": "92233720368547800411",
+          "answer": "142789000000",
+          "updatedAt": "1678521479",
+          "age": "120"
+        }
+      },
+      "marketRatioE18": "871337185404403405",
+      "gasPriceWei": "305274185887",
+      "setupArmGas": "236080",
+      "initialAsset": "100000000000",
+      "initialReserve": "100000000000",
+      "tradeSize": "10000000000",
+      "externalAcquisitionCost": "8723204920",
+      "policyHealthy": false,
+      "strictOneHourEligible": true,
+      "guarded": {
+        "action": "impaired-inflow-refused",
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "100000000000",
+        "virtualReserve": "100000000000",
+        "fees": "0",
+        "markedReserveValue": "187133718540"
+      },
+      "unguarded": {
+        "action": "rational-inflow-executed",
+        "quoteOutput": "9967520284",
+        "sourceGas": "154589",
+        "fillGas": "388010",
+        "gasBudgetReserve": "282057679",
+        "takerProfitReserve": "962257685",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "110000000000",
+        "reserve": "90032479716",
+        "virtualAsset": "110000000000",
+        "virtualReserve": "90032479716",
+        "fees": "30000000",
+        "markedReserveValue": "185879570110",
+        "changeFromInitialMark": "-1254148430"
+      },
+      "delaySensitivity": {
+        "kind": "synthetic accepted $1/$1 observations, not historical feed data",
+        "updatedAt": 1678521318,
+        "executionTimestamp": 1678521623
+      },
+      "delayedGuard": {
+        "action": "rational-inflow-executed",
+        "quoteOutput": "9967520284",
+        "sourceGas": "154589",
+        "fillGas": "370882",
+        "gasBudgetReserve": "273154343",
+        "takerProfitReserve": "971161021",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "110000000000",
+        "reserve": "90032479716",
+        "virtualAsset": "110000000000",
+        "virtualReserve": "90032479716",
+        "fees": "30000000",
+        "markedReserveValue": "185879570110",
+        "changeFromInitialMark": "-1254148430"
+      },
+      "direct": {
+        "action": "halted-exit-unavailable",
+        "executionGas": "90081",
+        "gasBudgetReserve": "46826880",
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "0",
+        "virtualReserve": "0",
+        "fees": "0",
+        "markedReserveValue": "187086891660"
+      },
+      "guardedExit": {
+        "action": "unavailable-before-gas",
+        "floor": "8734218187",
+        "asset": "100000000000",
+        "reserve": "100000000000",
+        "virtualAsset": "100000000000",
+        "virtualReserve": "100000000000",
+        "fees": "0",
+        "markedReserveValue": "187133718540"
+      }
+    },
+    {
+      "phase": "recovery",
+      "block": 16818931,
+      "blockHash": "0xace6cb7af0f2da2a031f802a92d778093286765858c272e1edac1406dbb13ced",
+      "headerTimestamp": 1678708799,
+      "executionTimestamp": 1678708818,
+      "feeds": {
+        "asset": {
+          "address": "0x8fffffd4afb6115b954bd326cbe7b4ba576818f6",
+          "round": "36893488147419104427",
+          "answer": "98991589",
+          "updatedAt": "1678700363",
+          "age": "8436"
+        },
+        "reserve": {
+          "address": "0x3e7d1eab13ad0104d2750b8863b489d65364e32d",
+          "round": "36893488147419104086",
+          "answer": "100464855",
+          "updatedAt": "1678678667",
+          "age": "30132"
+        },
+        "eth": {
+          "address": "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
+          "round": "92233720368547800528",
+          "answer": "158422160000",
+          "updatedAt": "1678708547",
+          "age": "252"
+        }
+      },
+      "marketRatioE18": "986830831177507391",
+      "gasPriceWei": "17666678449",
+      "setupArmGas": "236080",
+      "initialAsset": "100000000000",
+      "initialReserve": "100000000000",
+      "tradeSize": "10000000000",
+      "externalAcquisitionCost": "9873257501",
+      "policyHealthy": true,
+      "strictOneHourEligible": false,
+      "guarded": {
+        "action": "rational-inflow-executed",
+        "quoteOutput": "9967520284",
+        "sourceGas": "146739",
+        "fillGas": "390132",
+        "gasBudgetReserve": "17947684",
+        "takerProfitReserve": "76315099",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "110000000000",
+        "reserve": "90032479716",
+        "virtualAsset": "110000000000",
+        "virtualReserve": "90032479716",
+        "fees": "30000000",
+        "markedReserveValue": "198583871145",
+        "changeFromInitialMark": "-99211972"
+      },
+      "unguarded": {
+        "action": "rational-inflow-executed",
+        "quoteOutput": "9967520284",
+        "sourceGas": "146739",
+        "fillGas": "388010",
+        "gasBudgetReserve": "17876729",
+        "takerProfitReserve": "76386054",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "110000000000",
+        "reserve": "90032479716",
+        "virtualAsset": "110000000000",
+        "virtualReserve": "90032479716",
+        "fees": "30000000",
+        "markedReserveValue": "198583871145",
+        "changeFromInitialMark": "-99211972"
+      },
+      "direct": {
+        "action": "same-healthy-policy",
+        "quoteOutput": "9967520284",
+        "sourceGas": "146739",
+        "fillGas": "390132",
+        "gasBudgetReserve": "17947684",
+        "takerProfitReserve": "76315099",
+        "trialState": {
+          "asset": "110000000000",
+          "reserve": "90032479716",
+          "virtualAsset": "110000000000",
+          "virtualReserve": "90032479716",
+          "fees": "30000000"
+        },
+        "asset": "110000000000",
+        "reserve": "90032479716",
+        "virtualAsset": "110000000000",
+        "virtualReserve": "90032479716",
+        "fees": "30000000",
+        "markedReserveValue": "198583871145",
+        "changeFromInitialMark": "-99211972"
+      }
+    }
+  ]
+}
