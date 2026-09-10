@@ -122,7 +122,7 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         if (msg.sender != SWAP_VM) revert UnauthorizedCaller(msg.sender);
         if (args.length != 2) revert InvalidInstructionArgsLength(args.length);
         uint16 peggedInstructionLength = uint16(bytes2(args));
-        if (peggedInstructionLength != _PEGGED_INSTRUCTION_LENGTH) {
+        if (peggedInstructionLength != _healthyInstructionLength()) {
             revert InvalidPeggedInstructionLength(peggedInstructionLength);
         }
         if (
@@ -157,8 +157,8 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         // below the trigger must never be rounded into the healthy region.
         uint256 healthRatioE18 = Math.mulDiv(badUsdE18, _ONE, goodUsdE18);
 
-        // Preserve the upstream pegged curve while both assets remain inside the configured safety band.
-        if (healthRatioE18 >= TRIGGER_RATIO_E18) {
+        // Legacy policy is relative-only. Stricter policies override this hook.
+        if (_isHealthy(badUsdE18, goodUsdE18, healthRatioE18)) {
             return (updatedNextPC, choppedLength, updatedSwap);
         }
 
@@ -222,7 +222,19 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         (,, commitment) = _readOracleState();
     }
 
-    function _readOracleState() private view returns (
+    function _isHealthy(uint256, uint256, uint256 ratio) internal view virtual returns (bool) {
+        return ratio >= TRIGGER_RATIO_E18;
+    }
+
+    function _healthyInstructionLength() internal pure virtual returns (uint16) {
+        return _PEGGED_INSTRUCTION_LENGTH;
+    }
+
+    function _maxAge(IPriceOracle) internal view virtual returns (uint32) {
+        return MAX_STALENESS;
+    }
+
+    function _readOracleState() internal view returns (
         uint256 badUsdE18,
         uint256 goodUsdE18,
         bytes32 commitment
@@ -267,8 +279,9 @@ contract BreakwaterGuard is IExtruction, IStaticExtruction {
         if (updatedAt > block.timestamp) {
             revert FeedTimestampInFuture(address(feed), updatedAt, block.timestamp);
         }
-        if (block.timestamp - updatedAt > MAX_STALENESS) {
-            revert StaleFeed(address(feed), updatedAt, block.timestamp, MAX_STALENESS);
+        uint32 maxAge = _maxAge(feed);
+        if (block.timestamp - updatedAt > maxAge) {
+            revert StaleFeed(address(feed), updatedAt, block.timestamp, maxAge);
         }
 
         priceE18 = uint256(answer) * (10 ** (_MAX_DECIMALS - feedDecimals));

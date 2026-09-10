@@ -4,18 +4,24 @@
 >
 > **Powered by Aqua — © Degensoft Ltd 2025**
 
-Breakwater is an Aqua/SwapVM liquidity position for DAO treasuries. It provides
-two-way stablecoin liquidity while the pair is healthy, then turns the same
-immutable position into a one-way exit market when an authenticated price feed
-detects a depeg.
+Breakwater lets a treasury create productive liquidity with explicit risk limits.
+Aqua/SwapVM enforce those limits through healthy fee-bearing trades and bounded
+stressed exits, while the owner retains custody and can cancel its allocation.
 
 During stress, a successful swap may never increase the strategy's virtual
-balance of the impaired asset. An exposure-reducing swap must remain executable
-at a bounded oracle-derived price.
+balance of the impaired asset. An exposure-reducing swap is permitted at a bounded
+observation-derived price when accepted data, backing and a willing taker are
+available. Execution is not guaranteed; the discount is not a total-loss cap.
 
 ## Status
 
-Breakwater's public Sepolia taker journey is live, with successful builder-operated
+The core owner lifecycle is implemented on this branch and undergoing release
+validation: creation, policy/allocation, approvals/shipment, explicit healthy fees,
+stress/refusal/halt states, actual exit proceeds and cancellation. See
+[`docs/treasury-product.md`](docs/treasury-product.md) for accounting and safety limits.
+This is not yet a claim that the new owner release is publicly deployed.
+
+Breakwater's earlier public Sepolia taker journey is live, with successful builder-operated
 swaps. Independent-user completion evidence is pending. Project-specific work began after the
 official kickoff at `2026-09-04T16:00:00Z`; this repository was initialized at
 `2026-09-04T17:04:11Z`.
@@ -62,9 +68,11 @@ npx -y yarn@1.22.22 test:fork
 The captured block, feed rounds, quote, and Aqua balance deltas are recorded in
 [`evidence/mainnet-fork-2026-09-04.md`](evidence/mainnet-fork-2026-09-04.md).
 
-The taker console lives in [`web`](web) and reads the committed Sepolia market
-manifest. The public app is at https://breakwater.dolepee.com and automatically
-quotes before explicit approval and swap actions. To run locally:
+The owner console lives in [`web`](web); its release manifest is separate from the
+earlier market manifest. Until configured, it explicitly disables owner creation.
+The previous taker console is retained at `/trade` on this branch. Both use automatic
+quotes before explicit approval and swap actions. The existing public deployment
+is at https://breakwater.dolepee.com. To run locally:
 
 ```sh
 cd web

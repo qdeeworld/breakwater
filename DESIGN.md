@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Breakwater Marine Instrument
-description: A daylight trading console that makes treasury-defense state and the permitted swap direction immediately legible.
+description: A daylight treasury console for owner-created liquidity, earned fees and explicit trading limits.
 colors:
   fog: "#EAF2F5"
   primary: "#072A40"
@@ -11,7 +11,7 @@ colors:
   flare: "#C6314A"
 typography:
   display:
-    fontFamily: Barlow Condensed Variable
+    fontFamily: Barlow Condensed
     fontSize: 48px
     fontWeight: 650
     lineHeight: 0.95
@@ -36,27 +36,19 @@ spacing:
 
 # Breakwater interface system
 
-## Product intent
+## Overview
 
-Breakwater is a single-purpose execution surface for a taker trading against a DAO treasury position protected by the Breakwater Guard. The interface must answer three questions without interpretation: what state is the position in, which direction is permitted now, and what will this wallet sign?
+Breakwater lets a treasury owner create productive Aqua liquidity with explicit risk limits. Ownership, actual fees and understandable policy changes lead the experience; trading against a position is the complementary participant journey.
 
-This is an operational instrument, not a protocol landing page. The primary action is quoting and settling the currently permitted trade. Explanatory material stays subordinate to that job.
+This is an operational instrument, not a protocol landing page. The owner chooses allocation and policy, approves and ships, observes earnings and remaining exposure, and can cancel. Aqua/SwapVM enforce ordinary trades and bounded stressed exits. Atomic clearing is optional rather than the primary product promise.
 
-## Visual thesis
+### Visual thesis
 
 Use the visual language of a daylight marine control panel: pale fogged surfaces, deep harbor ink, thin structural rules, condensed instrument labels, and precise monospaced readings. The signature element is a horizontal **tide gate** joining the two asset reservoirs. It visualizes the actual guard state rather than decorating it.
 
 Avoid the familiar dark crypto-terminal treatment, glass cards, neon gradients, oversized marketing headlines, floating token art, and soft pill-shaped containers. Depth comes from hierarchy, borders, and tonal surface changes, not blur or heavy shadow.
 
-## Typography
-
-- **Display — Barlow Condensed Variable:** position state, asset symbols, and the principal amount. Use sentence case for prose and compact uppercase only for short instrument labels.
-- **Body — Manrope Variable:** instructions, transaction explanations, controls, and errors.
-- **Data — IBM Plex Mono:** prices, ratios, addresses, deadlines, transaction hashes, and state identifiers. Preserve tabular alignment for changing values.
-
-On narrow screens, scale the display style down rather than allowing state labels or amounts to wrap awkwardly. Body copy should remain at least 16px in interactive contexts.
-
-## Color behavior
+## Colors
 
 - `fog` is the page canvas and low-emphasis control background.
 - `foam` is the primary working surface.
@@ -67,39 +59,55 @@ On narrow screens, scale the display style down rather than allowing state label
 
 Never communicate route availability by color alone. Pair state color with a plain-language label, directional arrow, and open/closed gate shape. Keep normal text contrast at WCAG AA or better.
 
-## Layout and spacing
+## Typography
 
-The first viewport begins with a compact identity row, network and wallet status, then the live position state. On desktop, use a seven-column live-position region beside a five-column trade ticket. On mobile, place the trade ticket immediately after the state summary and follow it with the full tide gate, keeping the signing path ahead of secondary telemetry.
+Use the display face for position states, asset symbols and principal amounts; body type for instructions, controls and errors; data type for prices, addresses and transaction details. Keep changing figures tabular. Use sentence case for prose and compact uppercase only for short instrument labels. Scale display type down on narrow screens before amounts wrap.
 
-Use the 4px spacing unit. Common gaps are 8px for tightly related readings, 16px inside controls, 24px between component groups, and 32px between major sections. Working surfaces have 4px corners, 1px rules, and little or no drop shadow.
+## Layout
+
+The first viewport begins with a compact identity row, network and wallet status, then the owner's positions and a clear creation action. Place allocation and policy together during creation. A selected position places inventory, actual earnings and policy state beside the next owner action or trade ticket. On mobile, put that next action immediately after the state summary, ahead of secondary telemetry.
+
+Use the shared spacing unit and grouped gaps. Keep related readings tighter than independent component groups and major sections.
+
+## Elevation & Depth
+
+Establish hierarchy with thin structural rules and tonal working surfaces rather than blur or heavy shadow.
+
+## Shapes
+
+Keep the shared restrained corner shape for working surfaces, buttons and inputs. Do not introduce soft pill-shaped containers.
 
 ## Components
 
 ### Tide gate
 
-Show two labeled asset reservoirs connected by a central guard gate. In healthy state, both directional paths are visually available. In stressed state, the BAD-asset inflow path is visibly closed while the GOOD-in/BAD-out unwind path remains open. Animate only the gate and flow indicator when state changes, and disable that motion under `prefers-reduced-motion`.
+Show two labeled asset reservoirs connected by a central guard gate. Healthy permits two-way trading; stressed closes impaired-asset inflow and permits exposure-reducing trades; an unsafe reserve or invalid observations halt both. An allowed direction is not a guaranteed available exit: insufficient inventory, allowance or liquidity must remain visible. Animate only actual state changes and disable motion under reduced-motion preferences.
 
 ### Position state panel
 
-Lead with `Healthy` or `Stressed`, followed by the observed price, configured trigger, and data freshness. Technical identifiers belong in a compact disclosure below the decision-critical readings. Never invent live values; unresolved data is shown as unavailable.
+Lead with the actual state, including draft, healthy, stressed, halted and cancelled. Show independent asset prices, configured trigger, each feed's observation age and limits. Technical identifiers belong in a disclosure below these readings. Unresolved data is unavailable, not a healthy default.
+
+### Owner controls and earnings
+
+Separate creation from token approval and Aqua shipment; explain what each signature authorizes. Cancelling removes the Aqua allocation without implying a custodial withdrawal. Show settled healthy fees separately from exit proceeds, remaining token exposure and price gains or losses. Keep policy choices immutable for an existing order and explain that changes require cancellation and a new position.
 
 ### Trade ticket
 
-Use one amount input, an explicit `You pay` / `You receive` summary, and one active-voice primary button whose label reflects the next real step: `Connect wallet`, `Approve USDT`, `Get fresh quote`, or `Swap USDT for USDC`. Threshold, deadline, fees, and oracle commitment are visible before signing, with technical detail collapsed by default.
+Use one amount input, an explicit `You pay` / `You receive` summary, and an active-voice primary button naming the next real step. Quotes update automatically after input settles; manual refresh is a recovery action. Show minimum received and fees before signing, with deadline and oracle commitment in technical detail.
 
 ### Transaction receipt
 
 After settlement, retain the completed amounts, state used for execution, and linked transaction hash. Failure messages state whether the wallet, allowance, quote freshness, oracle state, deadline, or onchain call caused the stop, and provide the corresponding recovery action.
 
-## Interaction rules
+## Do's and Don'ts
 
 - The UI derives the permitted direction from onchain state; it does not present a disabled direction as a viable quote.
 - A changed oracle commitment invalidates the displayed quote and requires a visible requote.
 - Wallet and network mismatches are explained before the user reaches a signing prompt.
-- Keyboard focus is conspicuous and follows visual order. Touch targets are at least 44px.
+- Keyboard focus is conspicuous and follows visual order. Native labeled controls and generous touch targets are required.
 - Loading states preserve layout and name the operation in progress. Empty, disconnected, stale-data, rejected-signature, and reverted-transaction states each have a purposeful recovery path.
 - The interface never labels a mock or simulated value as live.
 
-## Voice
+### Voice
 
 Use direct, calm language suitable for a consequential transaction. Prefer `Stressed — only treasury unwind is open` over protocol jargon. Avoid judge-facing labels, hype, fabricated impact claims, and unexplained abbreviations.

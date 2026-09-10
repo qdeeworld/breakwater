@@ -29,6 +29,24 @@ a claim that the upstream implementation was created by Codex.
 
 ## Human contribution
 
+### September 8 owner-lifecycle extension
+
+Codex generated and revised `BreakwaterMakerAMM.sol`, `BreakwaterPolicy.sol`,
+`BreakwaterPositions.sol`, `BreakwaterScenario.sol`, `MakerLifecycle.test.ts`,
+the maker deployment/integration scripts, `web/app/treasury-console.tsx`,
+`web/lib/maker.ts`, their deployment manifest, route/metadata/style changes,
+`docs/treasury-product.md`, and the associated chain-evidence record.
+The fee-bearing builder uses the pinned official instruction set and program
+builder; it does not claim authorship of the underlying Aqua/SwapVM primitives.
+The earlier atomic executor, safe-direct comparator, fork scenarios and USD
+experiment on this branch were also AI-assisted work.
+
+Qdee explicitly directed closing the execution-cost investigation, keeping atomic
+clearing optional, and prioritizing the owner creation/fee/policy/interface loop.
+This superseded delaying that loop for willingness-to-pay evidence. The new
+Sepolia validation uses a project-controlled maker and project-controlled
+`MockTaker`; it is not independent-user evidence or observed market economics.
+
 Qdee directed this project's scope and workflow, kept it separate from prior
 projects, required a dedicated project wallet, funded testnet deployment, and
 tested the public swap journey. Qdee identified the missing wallet-disconnect

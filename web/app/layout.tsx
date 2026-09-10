@@ -7,9 +7,9 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://breakwater.dolepee.com'),
-  title: 'Breakwater — Aqua liquidity that stops buying the depeg',
+  title: 'Breakwater — Treasury liquidity with explicit risk limits',
   description:
-    'Execute a guarded treasury unwind through 1inch Aqua and SwapVM when a stablecoin leaves its safety band.',
+    'Create treasury-owned Aqua liquidity, track settled trading fees, and enforce explicit limits with SwapVM. Try the lifecycle with no-value Sepolia tokens.',
   alternates: { canonical: '/' },
   icons: {
     icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
@@ -17,7 +17,8 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     title: 'Breakwater',
-    description: 'Aqua liquidity that stops buying the depeg.',
+    description:
+      'Treasury-owned liquidity with trading fees and explicit risk limits, enforced through Aqua and SwapVM.',
     url: '/',
     siteName: 'Breakwater',
     type: 'website',
@@ -34,7 +35,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Breakwater',
-    description: 'Aqua liquidity that stops buying the depeg.',
+    description:
+      'Treasury-owned liquidity with trading fees and explicit risk limits, enforced through Aqua and SwapVM.',
     images: ['https://breakwater.dolepee.com/og.png'],
   },
 };
