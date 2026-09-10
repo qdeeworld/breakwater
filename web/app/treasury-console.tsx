@@ -1171,6 +1171,27 @@ export function TreasuryConsole() {
                             ? 'No allocation remains in Aqua. The owner keeps their wallet assets.'
                             : position.observation.error}
                   </p>
+                  {state === 'Halted' && position.scenario !== zeroAddress && (
+                    <div className="notice">
+                      <p>
+                        Refresh state only rereads the chain. Expired sample
+                        observations need an update from this position’s owner;
+                        unsafe observations continue to block trading.
+                      </p>
+                      {isOwner ? (
+                        <a
+                          className="text-action"
+                          href="#sample-price-controls"
+                        >
+                          Review sample-price controls
+                        </a>
+                      ) : (
+                        <Link className="text-action" href="/positions">
+                          Find another position or create your own
+                        </Link>
+                      )}
+                    </div>
+                  )}
                   <dl className="maker-metrics">
                     <div>
                       <dt>Remaining allocation · bUSD</dt>
@@ -1523,11 +1544,16 @@ export function TreasuryConsole() {
                     </>
                   )}
                   {isOwner && position.scenario !== zeroAddress && (
-                    <section className="maker-section">
+                    <section
+                      className="maker-section"
+                      id="sample-price-controls"
+                    >
                       <h3>Sample-price controls</h3>
                       <p>
                         No live market prices. These actions change only this
-                        position’s observations.
+                        position’s observations. Choose the intended scenario
+                        and confirm in your wallet to update both sample prices
+                        and their timestamps. This does not change the policy.
                       </p>
                       <div className="maker-actions">
                         {[

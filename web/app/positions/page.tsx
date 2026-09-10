@@ -15,6 +15,17 @@ export default function Positions() {
     useState<Awaited<ReturnType<typeof discoverPositions>>>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const noneReady =
+    !!result?.entries.length &&
+    result.entries.every(
+      ({ position: p }) =>
+        !p ||
+        !positionStatus({
+          ...p,
+          healthy: p.observation.value?.[0],
+          policyError: p.observation.error,
+        }).tradable,
+    );
   const sequence = useRef(0);
   async function refresh() {
     const id = ++sequence.current;
@@ -120,6 +131,18 @@ export default function Positions() {
               </Link>
             </div>
           )}
+          {noneReady && (
+            <div className="position-panel maker-panel">
+              <h3>No listed position is ready to quote</h3>
+              <p>
+                See each position’s reason below, or create your own sample
+                allocation. Creating it does not supply a willing counterparty.
+              </p>
+              <Link className="text-action" href="/">
+                Create a position
+              </Link>
+            </div>
+          )}
           <div className="discovery-grid">
             {result?.entries.map(({ hash, position: p, error: entryError }) => {
               const state = p
@@ -170,6 +193,11 @@ export default function Positions() {
               );
             })}
           </div>
+          <p className="action-help">
+            Default sample observations expire after 24h for bUSD and 25h for
+            rUSD. Only the position’s owner can update them. Refresh positions
+            reads the chain; it does not refresh sample prices.
+          </p>
           <p className="action-help">
             An exit needs a willing buyer and a fresh executable quote. There is
             no guaranteed exit, redemption or recovery. Creating an allocation

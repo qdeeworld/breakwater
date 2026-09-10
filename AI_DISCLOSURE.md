@@ -78,6 +78,13 @@ provider tests do not establish compatibility with the tester's specific wallet.
 
 ## Reused material and development records
 
+### September 10 sample-recovery guidance
+
+Codex added an actionable unavailable-market state and explicit owner-only sample
+refresh guidance to the discovery and treasury screens. These interface changes
+do not alter sample timestamps, policy freshness limits, trading permissions,
+or contract deployments.
+
 The project imported 1inch's official `swap-vm-template` at `ad719fc`, then
 migrated to the pinned Aqua and SwapVM releases. The imported contracts,
 helpers, configuration, and license material are not original Breakwater work.
