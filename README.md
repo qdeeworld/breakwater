@@ -46,6 +46,18 @@ Those claims reproduce in the local suite and on the pinned Ethereum fork.
 The deployed Sepolia market also rejects toxic-direction quote and swap calls;
 the read-only reproduction below does not broadcast a failed transaction.
 
+## Position discovery (release candidate)
+
+The `/positions` route lists up to eight recent directory registrations within
+20,000 blocks. It uses live policy/backing reads and links to the existing owner
+position screen. Cancelled, unshipped, halted and unbacked positions are not
+advertised as tradeable. Custom-feed registrations are excluded from automatic
+policy reads; the sample market only reads directory-created scenarios.
+This is bounded discovery, not an exhaustive order book or a guarantee of fills.
+The owner statement separates historical fees/proceeds, remaining virtual
+allocation and physical wallet backing. A distinct-counterparty completion of
+the discovery-to-fill path remains pending; this candidate is not yet public.
+
 ## Primary target
 
 ETHOnline 2026 Classic — 1inch, **Build an Aqua App**.

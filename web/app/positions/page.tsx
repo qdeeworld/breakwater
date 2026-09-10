@@ -1,0 +1,182 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { formatUnits } from 'viem';
+import { Waves } from 'lucide-react';
+import { discoverPositions } from '@/lib/discovery';
+import { positionStatus } from '@/lib/position-status';
+import { shortenHex } from '@/lib/breakwater';
+
+const amount = (value: bigint) => formatUnits(value, 6);
+
+export default function Positions() {
+  const [result, setResult] =
+    useState<Awaited<ReturnType<typeof discoverPositions>>>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const sequence = useRef(0);
+  async function refresh() {
+    const id = ++sequence.current;
+    setLoading(true);
+    setError('');
+    setResult(undefined);
+    try {
+      const next = await discoverPositions();
+      if (id === sequence.current) setResult(next);
+    } catch {
+      if (id === sequence.current)
+        setError(
+          'Could not load positions from Sepolia. Retry discovery or open a position using its share link.',
+        );
+    } finally {
+      if (id === sequence.current) setLoading(false);
+    }
+  }
+  useEffect(() => {
+    let cancelled = false;
+    const id = ++sequence.current;
+    void discoverPositions()
+      .then((next) => {
+        if (!cancelled && id === sequence.current) setResult(next);
+      })
+      .catch(() => {
+        if (!cancelled && id === sequence.current)
+          setError(
+            'Could not load positions from Sepolia. Retry discovery or open a position using its share link.',
+          );
+      })
+      .finally(() => {
+        if (!cancelled && id === sequence.current) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return (
+    <div className="site-shell maker-shell">
+      <a className="skip-link" href="#positions">
+        Skip to positions
+      </a>
+      <header className="topbar">
+        <Link className="wordmark" href="/">
+          <span className="wordmark-mark">
+            <Waves aria-hidden="true" />
+          </span>
+          Breakwater
+        </Link>
+        <Link className="text-action" href="/">
+          Create a position
+        </Link>
+      </header>
+      <main className="main-content" id="positions">
+        <section className="state-intro discovery-intro">
+          <div>
+            <p className="instrument-label">Sepolia · no-value test tokens</p>
+            <h1>Find liquidity.</h1>
+            <p className="state-summary">
+              Trade a treasury’s existing position. In stress, buy impaired
+              inventory with reserve tokens—only when its policy permits.
+            </p>
+          </div>
+        </section>
+        <section aria-labelledby="recent-positions">
+          <div className="maker-heading">
+            <h2 id="recent-positions">Recent positions</h2>
+            <button
+              className="text-action"
+              disabled={loading}
+              onClick={() => void refresh()}
+            >
+              {loading ? 'Reading Sepolia…' : 'Refresh positions'}
+            </button>
+          </div>
+          <p className="action-help">
+            Latest eight registrations within 20,000 blocks, including
+            unavailable positions. Owner-controlled sample prices, not live
+            market feeds. No wallet is needed to browse.
+          </p>
+          <output className="maker-status">
+            {loading
+              ? 'Loading position states and backing…'
+              : result
+                ? `${result.entries.length} positions found. Scan: blocks ${result.scannedFrom}–${result.head}.`
+                : ''}
+          </output>
+          {error && (
+            <p className="notice error" role="alert">
+              {error}
+            </p>
+          )}
+          {result?.entries.length === 0 && (
+            <div className="position-panel maker-panel">
+              <h3>No recent positions</h3>
+              <p>
+                Create and ship a position to make liquidity available, or use
+                an existing position’s share link.
+              </p>
+              <Link className="text-action" href="/">
+                Create a position
+              </Link>
+            </div>
+          )}
+          <div className="discovery-grid">
+            {result?.entries.map(({ hash, position: p, error: entryError }) => {
+              const state = p
+                ? positionStatus({
+                    ...p,
+                    healthy: p.observation.value?.[0],
+                    policyError: p.observation.error,
+                  })
+                : undefined;
+              return (
+                <article className="position-panel maker-panel" key={hash}>
+                  <p className="instrument-label">
+                    bUSD / rUSD · {shortenHex(hash)}
+                  </p>
+                  <h3>{state?.label ?? 'Unavailable'}</h3>
+                  <p>{state?.reason ?? entryError}</p>
+                  {p && (
+                    <>
+                      <p className="action-help">
+                        Owner {shortenHex(p.owner)} · healthy fee{' '}
+                        {(p.feeBps / 100).toFixed(2)}%
+                      </p>
+                      <dl className="maker-metrics">
+                        <div>
+                          <dt>Backed bUSD output</dt>
+                          <dd>{amount(p.assetAvailable)}</dd>
+                        </div>
+                        <div>
+                          <dt>Backed rUSD output</dt>
+                          <dd>{amount(p.reserveAvailable)}</dd>
+                        </div>
+                      </dl>
+                      <p className="action-help">
+                        Read at block {p.blockNumber.toString()}. Backing is not
+                        a quote or reserved liquidity. Other fills, wallet
+                        transfers and approvals can change it.
+                      </p>
+                      <Link
+                        className="text-action"
+                        href={`/?position=${hash}`}
+                        aria-label={`${state?.tradable ? 'Quote a trade' : 'View position'} ${shortenHex(hash)}`}
+                      >
+                        {state?.tradable ? 'Quote a trade' : 'View position'} →
+                      </Link>
+                    </>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+          <p className="action-help">
+            An exit needs a willing buyer and a fresh executable quote. There is
+            no guaranteed exit, redemption or recovery. Creating an allocation
+            does not guarantee fills or earnings.
+          </p>
+        </section>
+      </main>
+    </div>
+  );
+}
