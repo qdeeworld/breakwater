@@ -85,6 +85,11 @@ refresh guidance to the discovery and treasury screens. These interface changes
 do not alter sample timestamps, policy freshness limits, trading permissions,
 or contract deployments.
 
+September 11: Codex added structured/nested RPC error decoding in
+`web/lib/policy-error.ts` and regression tests, so reserve-unsafe and expired
+observations retain their specific explanations. This changes presentation,
+not the contract's safety decisions or accepted observation ages.
+
 The project imported 1inch's official `swap-vm-template` at `ad719fc`, then
 migrated to the pinned Aqua and SwapVM releases. The imported contracts,
 helpers, configuration, and license material are not original Breakwater work.
