@@ -1,0 +1,105 @@
+{
+  "chainId": 11155111,
+  "environment": "Sepolia, no-value bUSD/rUSD, owner-controlled sample observations; not live market feeds",
+  "orderHash": "0xda29a6957d7812a4ea0d69655a53885f3348a4eb2447cd89560e8a19d8300b1c",
+  "owner": "0xbad35FA6e368e90fC4faf63507F2D0A2Fdf94BAF",
+  "taker": "0x2ef3530496b22b2e87f1e5702e4d1fd6b3d05244",
+  "policy": "0x79172aFaAE59557492a17af37bcB6A5FA1239654",
+  "scenario": "0x168fe2521a266130a95642F414bF2e359c7bB28C",
+  "router": "0x353A054400d5855B8FCB1cbF448F13323d1DB17b",
+  "directory": "0x6Ae6e5ACC8a2770952f8Cbf9D6FD7c46bd258f04",
+  "tokenDecimals": 6,
+  "healthyFill": {
+    "transaction": "0xe3f11857d6cb3bb187a16745b1cdd604d2d354dd5f725cf700696ad46aef60a4",
+    "block": 11674480,
+    "status": 1,
+    "assetIn": "1",
+    "reserveOut": "0.996975",
+    "assetFeeRetained": "0.003"
+  },
+  "impairedInputRefusal": {
+    "block": 11675196,
+    "scenarioTransaction": "0x2487e869a906fd29b36e17e6256f76328135c622804d3c50863a3c6a6ad7025f",
+    "assetUsd": "0.94",
+    "reserveUsd": "1",
+    "methods": ["quote", "swap"],
+    "method": "read-only eth_call, exact input 1 bUSD, distinct taker caller and current oracle commitment",
+    "revert": "ToxicDirectionBlocked",
+    "minedFailedTrade": false
+  },
+  "preExitObservationRefresh": {
+    "scenarioTransaction": "0x1f69001657987c118646c1878aa3f44263473cbb93c53422c4edf87c846d4f78",
+    "block": 11682531,
+    "timestamp": 1789137288,
+    "status": 1,
+    "method": "Owner-called setScenario(1); mined state change, not eth_call",
+    "assetUsd": "0.94",
+    "reserveUsd": "1",
+    "observationTimestamp": 1789137288,
+    "secondsBeforeExit": 48
+  },
+  "stressedExit": {
+    "transaction": "0xc46bedb694393760ef351ea9b75e1160f2b959ce9a67a5392a87a9d09df1be08",
+    "block": 11682535,
+    "timestamp": 1789137336,
+    "status": 1,
+    "gasUsed": "342019",
+    "assetSold": "1.069175",
+    "reserveReceived": "1",
+    "event": "ExitSettled",
+    "ownerBalances": {
+      "beforeBlock": 11682534,
+      "afterBlock": 11682535,
+      "assetBefore": "118.609321",
+      "assetAfter": "117.540146",
+      "reserveBefore": "889.003025",
+      "reserveAfter": "890.003025"
+    }
+  },
+  "reserveHalt": {
+    "scenarioTransaction": "0x01932386627a07bd9ca6dafbc468fdc7e58ddc74468fa3160b2fb73df92a233d",
+    "status": 1,
+    "block": 11682594,
+    "assetUsd": "1",
+    "reserveUsd": "0.94",
+    "checks": "quote and swap eth_call, both directions, input 1 token, distinct taker and current commitment",
+    "revert": "UnsafeReserve(940000000000000000)",
+    "minedFailedTrade": false
+  },
+  "coDepegHalt": {
+    "scenarioTransaction": "0x3e369b688418587730aa01eaa3c8630b07ace7856f7d85de55061c5262864847",
+    "status": 1,
+    "block": 11682604,
+    "assetUsd": "0.94",
+    "reserveUsd": "0.94",
+    "checks": "quote and swap eth_call, both directions, input 1 token, distinct taker and current commitment",
+    "revert": "UnsafeReserve(940000000000000000)",
+    "minedFailedTrade": false
+  },
+  "healthyRecovery": {
+    "scenarioTransaction": "0xc2f830298bacc231e34aa3c0a71f3a108770ba3fcc409a2fa2aa0e0be17c2dfe",
+    "status": 1,
+    "block": 11682611,
+    "assetUsd": "1",
+    "reserveUsd": "1",
+    "healthy": true,
+    "assetIn1QuotesReserveOut": "0.996977",
+    "reserveIn1QuotesAssetOut": "0.996973",
+    "additionalSwap": false
+  },
+  "finalAccountingRaw": {
+    "assetFees": "3000",
+    "reserveFees": "0",
+    "healthyTrades": "1",
+    "exitTrades": "1",
+    "assetExited": "1069175",
+    "reserveProceeds": "1000000"
+  },
+  "limitations": [
+    "Guided distinct-wallet testing, not independently verified unassisted completion or demand.",
+    "Refusal evidence uses read-only calls; scenario updates and successful fills are mined transactions.",
+    "Sample observations expired between initial stress and exit and were refreshed; no continuous freshness or guaranteed availability claim.",
+    "Historical fees and proceeds are flows included in inventory, not extra balances or total profit.",
+    "No economic superiority, total-loss cap, guaranteed exit or live depeg-detection claim."
+  ]
+}

@@ -31,8 +31,15 @@ reduced aggregate wallet exposure. The earlier public taker journey remains at
 [/trade](https://breakwater.dolepee.com/trade). A September 10
 [distinct-wallet healthy fill](https://sepolia.etherscan.io/tx/0xe3f11857d6cb3bb187a16745b1cdd604d2d354dd5f725cf700696ad46aef60a4)
 paid 1 bUSD, received 0.996975 rUSD, and retained a 0.003 bUSD fee.
-This was guided, user-reported external testing, not verified unassisted completion
-or demand. A distinct-party stressed exit on that same position remains pending.
+On September 11, the same distinct wallet completed a
+[stressed exit](https://sepolia.etherscan.io/tx/0xc46bedb694393760ef351ea9b75e1160f2b959ce9a67a5392a87a9d09df1be08)
+on that position: the treasury received 1 rUSD and sold 1.069175 bUSD.
+Receipt logs and before/after token balances verify the change; the order was
+not replaced. Both fills were guided, user-reported external testing, not
+verified unassisted completion or demand. The same order subsequently halted
+for an unsafe reserve and a co-depeg, then returned to healthy quoting.
+The [same-position record](evidence/separate-party-lifecycle-2026-09-11.json)
+distinguishes settled transfers from read-only refusal checks.
 Project-specific work began after the
 official kickoff at `2026-09-04T16:00:00Z`; this repository was initialized at
 `2026-09-04T17:04:11Z`.
