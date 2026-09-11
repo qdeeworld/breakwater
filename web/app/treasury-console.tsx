@@ -29,12 +29,8 @@ import {
 import { sepolia } from 'viem/chains';
 import { ensureAllocationAllowance } from '@/lib/allocation-approval';
 import { switchToSepolia } from '@/lib/wallet-network';
-import {
-  settingsFromForm,
-  settingsKey,
-  type Settings,
-} from '@/lib/rehearsal-math';
-import { PolicyRehearsal } from './policy-rehearsal';
+import { settingsFromForm, type Settings } from '@/lib/rehearsal-math';
+import { CreationGuide } from './creation-guide';
 import {
   buildTakerTraits,
   describeError,
@@ -177,7 +173,6 @@ export function TreasuryConsole() {
   const [receiptHash, setReceiptHash] = useState<Hex>(),
     [showCreate, setShowCreate] = useState(true);
   const [pendingHash, setPendingHash] = useState<Hex>();
-  const [rehearsedKey, setRehearsedKey] = useState('');
   let creationSettings: Settings | undefined;
   try {
     creationSettings = settingsFromForm(asset, reserve, fee, trigger, discount);
@@ -836,13 +831,14 @@ export function TreasuryConsole() {
           <span className="network-chip">Sepolia · no-value test tokens</span>
           {account ? (
             <>
-              <span className="maker-address">{shortenHex(account)}</span>
               <button
-                className="wallet-button"
+                className="wallet-button connected-wallet"
+                aria-label={`Disconnect wallet ${shortenHex(account)}`}
                 disabled={!!busy}
                 onClick={disconnect}
               >
-                Disconnect
+                <span>{shortenHex(account)}</span>
+                <span>Disconnect</span>
               </button>
             </>
           ) : (
@@ -861,19 +857,16 @@ export function TreasuryConsole() {
           className={`state-intro ${showCreate ? '' : 'position-intro'}`}
         >
           <div>
-            <p className="instrument-label">
-              Treasury / {showCreate ? 'New position' : 'Position overview'}
-            </p>
             <h1>
               {showCreate
-                ? 'Make your liquidity deliberate.'
+                ? 'Create a treasury position'
                 : isOwner
-                  ? 'Your treasury at a glance.'
+                  ? 'Your treasury position'
                   : 'bUSD / rUSD'}
             </h1>
             <p className="state-summary">
               {showCreate
-                ? 'Earn trading fees while healthy. Stop buying an impaired asset when your limits trip. Explore the tradeoffs before creating.'
+                ? 'Earn fees while healthy. Stop buying the asset when your risk limits trip.'
                 : isOwner
                   ? 'Track what you hold, what you earned, and which trades your policy permits.'
                   : 'See what this position permits, then request a live quote.'}
@@ -985,7 +978,7 @@ export function TreasuryConsole() {
             )}
             {owned.length > 0 && (
               <label>
-                My positions (latest 20)
+                Your positions
                 <select
                   aria-label="Select my position"
                   value={owned.includes(selected as Hex) ? selected : ''}
@@ -1014,141 +1007,32 @@ export function TreasuryConsole() {
           </nav>
         )}
         {showCreate ? (
-          <div className="creation-workbench">
-            <section className="position-panel maker-panel">
-              <span className="eyebrow">01 / Configure</span>
-              <h2>Define your position.</h2>
-              <p>
-                Choose the allocation available to Aqua. Tokens stay in your
-                wallet; you approve and ship after creating the position.
-              </p>
-              <form id="create-position" onSubmit={create}>
-                <fieldset
-                  disabled={!!busy || !!pendingHash}
-                  className="creation-fieldset"
-                >
-                  <legend className="sr-only">
-                    Position allocation and limits
-                  </legend>
-                  <div className="maker-fields">
-                    <label>
-                      Asset allocation · bUSD
-                      <input
-                        ref={allocationRef}
-                        name="assetAllocation"
-                        inputMode="decimal"
-                        required
-                        aria-invalid={!!fieldError}
-                        aria-describedby={
-                          fieldError ? 'allocation-error' : undefined
-                        }
-                        value={asset}
-                        onChange={(e) => setAsset(e.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Reserve allocation · rUSD
-                      <input
-                        name="reserveAllocation"
-                        inputMode="decimal"
-                        required
-                        aria-invalid={!!fieldError}
-                        aria-describedby={
-                          fieldError ? 'allocation-error' : undefined
-                        }
-                        value={reserve}
-                        onChange={(e) => setReserve(e.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Healthy trading fee
-                      <select
-                        value={fee}
-                        onChange={(e) => setFee(e.target.value)}
-                      >
-                        <option value="10">0.10%</option>
-                        <option value="30">0.30%</option>
-                        <option value="100">1.00%</option>
-                      </select>
-                    </label>
-                    <label>
-                      Asset safety trigger
-                      <select
-                        value={trigger}
-                        onChange={(e) => setTrigger(e.target.value)}
-                      >
-                        <option value="98">
-                          Below $0.98 or 0.98 reserve units
-                        </option>
-                        <option value="99">
-                          Below $0.99 or 0.99 reserve units
-                        </option>
-                      </select>
-                    </label>
-                    <label>
-                      Maximum exit discount
-                      <select
-                        value={discount}
-                        onChange={(e) => setDiscount(e.target.value)}
-                      >
-                        <option value="0">0% below observation</option>
-                        <option value="25">0.25% below observation</option>
-                        <option value="50">0.50% below observation</option>
-                        <option value="100">1.00% below observation</option>
-                      </select>
-                    </label>
-                  </div>
-                  {fieldError && (
-                    <p
-                      id="allocation-error"
-                      role="alert"
-                      className="notice error"
-                    >
-                      {fieldError}
-                    </p>
-                  )}
-                  <p className="action-help">
-                    Reserve must stay within $0.98–$1.02; asset premiums above
-                    $1.02 halt trading. Observation limits: 24h asset / 25h
-                    reserve. These are owner-controlled sample feeds, not live
-                    USD prices. Changing the policy later requires a new
-                    position.
-                  </p>
-                </fieldset>
-              </form>
-            </section>
-            <PolicyRehearsal
-              settings={creationSettings}
-              onReviewed={setRehearsedKey}
-            />
-            <section className="activation-panel">
-              <div className="activation-heading">
-                <span className="eyebrow">03 / Create & activate</span>
-                <h2>Ready to put it to work?</h2>
-                <p>
-                  {creationSettings &&
-                  rehearsedKey === settingsKey(creationSettings)
-                    ? 'These are the settings used in your rehearsal.'
-                    : 'Your allocation and limits become immutable when you create.'}{' '}
-                  Creating deploys your position. Two token approvals and
-                  shipping to Aqua follow in separate wallet confirmations.
-                  Rehearsal is optional.
-                </p>
-              </div>
-              <button
-                className="primary-action"
-                disabled={!!busy || !!pendingHash || !d}
-                type="submit"
-                form="create-position"
-              >
-                {!account
-                  ? 'Connect wallet'
-                  : chain !== sepolia.id
-                    ? 'Switch to Sepolia'
-                    : 'Create this position'}
-              </button>
-            </section>
-          </div>
+          <CreationGuide
+            asset={asset}
+            reserve={reserve}
+            fee={fee}
+            trigger={trigger}
+            discount={discount}
+            onAsset={setAsset}
+            onReserve={setReserve}
+            onFee={setFee}
+            onTrigger={setTrigger}
+            onDiscount={setDiscount}
+            settings={creationSettings}
+            fieldError={fieldError}
+            onError={setFieldError}
+            allocationRef={allocationRef}
+            locked={!!busy || !!pendingHash}
+            configured={!!d}
+            onCreate={create}
+            createLabel={
+              !account
+                ? 'Connect wallet'
+                : chain !== sepolia.id
+                  ? 'Switch to Sepolia'
+                  : 'Create this position'
+            }
+          />
         ) : (
           <>
             {!position ? (
@@ -1174,11 +1058,6 @@ export function TreasuryConsole() {
                 >
                   <div className="maker-heading">
                     <div>
-                      <p className="instrument-label">
-                        {isOwner
-                          ? 'Your treasury position'
-                          : 'Treasury position'}
-                      </p>
                       <h2>
                         {state === 'Healthy'
                           ? 'Earn on both sides.'
@@ -1269,11 +1148,6 @@ export function TreasuryConsole() {
                     isOwner ? 'Position actions' : 'Trade this position'
                   }
                 >
-                  <span className="eyebrow">
-                    {isOwner
-                      ? 'Your next action'
-                      : 'Trade / separate counterparty'}
-                  </span>
                   {isOwner && !position.shipped && !position.cancelled ? (
                     <>
                       <h2>Activate your allocation</h2>
@@ -1323,7 +1197,7 @@ export function TreasuryConsole() {
                           }
                           onClick={() => void ship()}
                         >
-                          3. Ship position to Aqua
+                          3. Activate position on Aqua
                         </button>
                       </div>
                       <p className="action-help">
@@ -1562,7 +1436,6 @@ export function TreasuryConsole() {
                   className="position-panel maker-panel position-accounting"
                   aria-labelledby="inventory-heading"
                 >
-                  <span className="eyebrow">Treasury allocation / onchain</span>
                   <h2 id="inventory-heading">Where the assets stand.</h2>
                   <dl className="maker-metrics">
                     <div>

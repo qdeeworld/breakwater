@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { formatUnits } from 'viem';
-import { ArrowUpRight, FlaskConical, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 import {
   amount,
   healthyQuote,
@@ -23,9 +23,30 @@ const signed = (n: bigint) => `${n > 0n ? '+' : ''}${fmt(n)}`;
 const names = ['Before the shock', 'Depeg begins', 'Deeper stress', 'Recovery'];
 const titles = [
   'Your policy',
-  'Without acquisition guard',
-  'Halt / direct exit',
+  'Without the buying guard',
+  'Cancel / direct sale',
 ];
+const explanations: Record<string, string> = {
+  'Impaired inflow refused':
+    'Buying the impaired asset is blocked. No additional asset is accumulated.',
+  'Trading halted': 'Neither direction may trade with these observations.',
+  'Screened inflow':
+    'The modeled trader covers its assumed gas cost, so this one inflow is counted.',
+  'No gas-covering inflow':
+    'The modeled trader cannot cover its gas cost. No inflow or earned fee is assumed.',
+  'Outside curve range':
+    'This trade size is outside the curve’s range. No fill is assumed.',
+  'Inflow quote unavailable':
+    'The archived acquisition quote is unavailable. This outcome is unknown.',
+  'Exit quote unavailable':
+    'The archived sale quote is unavailable. Exit proceeds remain unknown.',
+  'Owner-funded bounded sale':
+    'The external sale meets the gross price floor. The owner pays estimated gas separately.',
+  'Cancel; sale below floor':
+    'The external sale misses the gross price floor. The alternative cancels without selling.',
+  'Cancel; unsafe observations':
+    'Unsafe observations prevent a sale. The alternative cancels without selling.',
+};
 export function PolicyRehearsal({
   settings,
   onReviewed,
@@ -77,18 +98,12 @@ export function PolicyRehearsal({
   return (
     <aside className="rehearsal-panel" aria-labelledby="rehearsal-title">
       <div className="rehearsal-heading">
-        <span className="eyebrow">
-          <FlaskConical size={16} aria-hidden="true" /> 02 / Rehearse
-        </span>
+        <h2 id="rehearsal-title">Test your policy</h2>
         <span className="sample-label">Historical rehearsal</span>
       </div>
-      <h2 id="rehearsal-title">
-        Meet your policy
-        <br />
-        <span>under pressure.</span>
-      </h2>
       <p className="rehearsal-lead">
-        See what your allocation permits—and what protection gives up.
+        Independent historical snapshots. Each starts with your allocation—not a
+        continuous backtest.
       </p>
       <fieldset className="rehearsal-scenarios">
         <legend className="sr-only">Historical checkpoint</legend>
@@ -102,14 +117,13 @@ export function PolicyRehearsal({
               setError('');
             }}
           >
-            <span>0{i + 1}</span>
             {name}
           </button>
         ))}
       </fieldset>
       <div className="rehearsal-controls">
         <label>
-          Asset units in one attempted trade
+          Asset units in one test trade
           <input
             inputMode="decimal"
             value={sizeText}
@@ -132,7 +146,7 @@ export function PolicyRehearsal({
           onClick={() => void run()}
         >
           {busy ? 'Reading archived pool…' : 'Rehearse these settings'}
-          <ArrowUpRight size={18} aria-hidden="true" />
+          <ArrowRight size={18} aria-hidden="true" />
         </button>
       </div>
       <p className="action-help" id="rehearsal-size-help">
@@ -157,7 +171,7 @@ export function PolicyRehearsal({
             <h3>
               {result
                 ? 'Settings changed. Rehearse again.'
-                : 'One allocation. Three choices.'}
+                : 'What would these limits permit?'}
             </h3>
             <p>
               Compare your limits, the same trade without the acquisition guard,
@@ -185,14 +199,14 @@ export function PolicyRehearsal({
         <div className="rehearsal-results">
           <div className={`rehearsal-verdict ${current.state.toLowerCase()}`}>
             <div>
-              <span className="eyebrow">
+              <p className="checkpoint-date">
                 {names[index]} ·{' '}
                 {new Date(checkpoints[index].timestamp * 1000)
                   .toISOString()
                   .slice(0, 16)
                   .replace('T', ' ')}{' '}
                 UTC
-              </span>
+              </p>
               <h3>
                 {current.state === 'Stressed'
                   ? 'Stop buying. Bounded sales only.'
@@ -203,106 +217,148 @@ export function PolicyRehearsal({
             </div>
             <span className="rehearsal-state">{current.state}</span>
           </div>
-          <div className="observation-strip">
-            <span>
-              Asset observation
-              <strong>
-                $
-                {Number(formatUnits(current.observation.assetUsd, 18)).toFixed(
-                  4,
-                )}
-              </strong>
-            </span>
-            <span>
-              Reserve observation
-              <strong>
-                $
-                {Number(
-                  formatUnits(current.observation.reserveUsd, 18),
-                ).toFixed(4)}
-              </strong>
-            </span>
-            <span>
-              Market mark
-              <strong>
-                {price(checkpoints[index].marketRatioE18)} reserve / asset
-              </strong>
-            </span>
+          <div className="rehearsal-outcomes">
+            {current.arms.map((arm, i) => (
+              <div key={titles[i]}>
+                <h4>{titles[i]}</h4>
+                <p>{explanations[arm.action] ?? arm.action}</p>
+              </div>
+            ))}
           </div>
+          <p className="exposure-summary">
+            <strong>Your existing exposure remains.</strong> The starting asset
+            allocation is{' '}
+            {fmt(
+              current.originalExposure < 0n
+                ? -current.originalExposure
+                : current.originalExposure,
+            )}{' '}
+            reserve units {current.originalExposure < 0n ? 'above' : 'below'}{' '}
+            parity at this market price. Refusing another purchase does not
+            recover it.
+          </p>
           {current.routeError && (
             <p role="alert" className="notice error">
               {current.routeError}
             </p>
           )}
-          <div className="comparison-grid">
-            {current.arms.map((arm, i) => (
-              <section className={`comparison-arm arm-${i}`} key={titles[i]}>
-                <span className="eyebrow">0{i + 1}</span>
-                <h3>{titles[i]}</h3>
-                <p className="arm-action">{arm.action}</p>
-                <dl>
-                  <div>
-                    <dt>Asset inventory</dt>
-                    <dd>{arm.known ? fmt(arm.asset) : 'Unknown'}</dd>
-                  </div>
-                  <div>
-                    <dt>Reserve inventory</dt>
-                    <dd>{arm.known ? fmt(arm.reserve) : 'Unknown'}</dd>
-                  </div>
-                  <div>
-                    <dt>Retained asset fees</dt>
-                    <dd>{arm.known ? fmt(arm.fee) : 'Unknown'}</dd>
-                  </div>
-                  <div>
-                    <dt>Estimated owner gas · reserve</dt>
-                    <dd>{arm.known ? fmt(arm.gas) : 'Unknown'}</dd>
-                  </div>
-                  <div className="arm-outcome">
-                    <dt>Change at the same market mark · reserve</dt>
-                    <dd className={arm.change < 0n ? 'negative' : ''}>
-                      {arm.known ? signed(arm.change) : 'Unknown'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>At hypothetical 1:1 recovery · reserve</dt>
-                    <dd>{arm.known ? signed(arm.atParity) : 'Unknown'}</dd>
-                  </div>
-                </dl>
-                {i === 2 && arm.action === 'Owner-funded bounded sale' && (
-                  <p className="arm-alternative">
-                    A cost-aware owner could cancel without selling instead:
-                    estimated gas {fmt(current.cancelGas)} reserve, unchanged
-                    token inventory. The sale above is not claimed to be the
-                    optimal choice.
-                  </p>
-                )}
-              </section>
-            ))}
-          </div>
-          <div className="rehearsal-takeaway">
-            <strong>Protection is a tradeoff, not a profit promise.</strong>
-            <p>
-              Your original asset allocation is already{' '}
-              {fmt(
-                current.originalExposure < 0n
-                  ? -current.originalExposure
-                  : current.originalExposure,
-              )}{' '}
-              reserve units {current.originalExposure < 0n ? 'above' : 'below'}{' '}
-              parity at this market mark. Refusing a new purchase does not
-              recover that exposure.
-            </p>
-            {current.offeredChange !== undefined && (
-              <p>
-                If the offered unguarded inflow settled, its incremental marked
-                change would be{' '}
-                <strong>{signed(current.offeredChange)} reserve</strong>.{' '}
-                {current.takerNet !== undefined && current.takerNet <= 0n
-                  ? 'This route does not cover modeled taker gas, so no inflow or fee is assumed above.'
-                  : 'This is not a forecast of trading volume.'}
+          <details className="rehearsal-comparison">
+            <summary>Compare balances, costs and recovery tradeoffs</summary>
+            <div className="observation-strip">
+              <span>
+                Asset observation
+                <strong>
+                  $
+                  {Number(
+                    formatUnits(current.observation.assetUsd, 18),
+                  ).toFixed(4)}
+                </strong>
+              </span>
+              <span>
+                Reserve observation
+                <strong>
+                  $
+                  {Number(
+                    formatUnits(current.observation.reserveUsd, 18),
+                  ).toFixed(4)}
+                </strong>
+              </span>
+              <span>
+                Market mark
+                <strong>
+                  {price(checkpoints[index].marketRatioE18)} reserve / asset
+                </strong>
+              </span>
+            </div>
+            {/* Keyboard users need to scroll the wide comparison at narrow widths. */}
+            {/* oxlint-disable jsx-a11y/no-noninteractive-tabindex */}
+            <section
+              className="comparison-table-wrap"
+              aria-label="Exact historical comparison"
+              tabIndex={0}
+            >
+              {/* oxlint-enable jsx-a11y/no-noninteractive-tabindex */}
+              <table className="comparison-table">
+                <caption>
+                  One hypothetical trade. Exact token amounts; fees are already
+                  included in inventory.
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Outcome</th>
+                    {titles.map((title) => (
+                      <th scope="col" key={title}>
+                        {title}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Action</th>
+                    {current.arms.map((a, i) => (
+                      <td key={i}>{a.action}</td>
+                    ))}
+                  </tr>
+                  {(
+                    [
+                      ['Asset inventory', 'asset'],
+                      ['Reserve inventory', 'reserve'],
+                      ['Retained asset fees', 'fee'],
+                      ['Estimated owner gas · reserve', 'gas'],
+                      ['Change at the same market price · reserve', 'change'],
+                      [
+                        'Change at hypothetical 1:1 recovery · reserve',
+                        'atParity',
+                      ],
+                    ] as const
+                  ).map(([label, field]) => (
+                    <tr key={field}>
+                      <th scope="row">{label}</th>
+                      {current.arms.map((a, i) => (
+                        <td
+                          key={i}
+                          className={
+                            a.known &&
+                            (field === 'change' || field === 'atParity') &&
+                            a[field] < 0n
+                              ? 'negative'
+                              : ''
+                          }
+                        >
+                          {a.known
+                            ? field === 'change' || field === 'atParity'
+                              ? signed(a[field])
+                              : fmt(a[field])
+                            : 'Unknown'}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+            {current.arms[2].action === 'Owner-funded bounded sale' && (
+              <p className="arm-alternative">
+                A cost-aware owner could cancel without selling instead:
+                estimated gas {fmt(current.cancelGas)} reserve, unchanged token
+                inventory. The sale is not claimed to be the optimal choice.
               </p>
             )}
-          </div>
+            <div className="rehearsal-takeaway">
+              <strong>Protection is a tradeoff, not a profit promise.</strong>
+              {current.offeredChange !== undefined && (
+                <p>
+                  If the offered unguarded inflow settled, its incremental
+                  marked change would be{' '}
+                  <strong>{signed(current.offeredChange)} reserve</strong>.{' '}
+                  {current.takerNet !== undefined && current.takerNet <= 0n
+                    ? 'This route does not cover modeled taker gas, so no inflow or fee is assumed above.'
+                    : 'This is not a forecast of trading volume.'}
+                </p>
+              )}
+            </div>
+          </details>
           <details className="rehearsal-method">
             <summary>Quotes, assumptions and limitations</summary>
             <p>
@@ -343,7 +399,7 @@ export function PolicyRehearsal({
               post-action balances and owner gas constant; no future sale is
               assumed. Observation ages: asset {current.observation.assetAge}s /
               reserve {current.observation.reserveAge}s. Accepted data can lag
-              markets. Only four predeclared March2023 checkpoints are tested.
+              markets. Only four predeclared March 2023 checkpoints are tested.
             </p>
             <a
               href={`https://etherscan.io/block/${checkpoints[index].block}`}

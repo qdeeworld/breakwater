@@ -65,9 +65,11 @@ Use the display face for position states, asset symbols and principal amounts; b
 
 ## Layout
 
-Use a persistent navigation rail on desktop and a compact horizontal navigation on mobile. Separate the treasury, available liquidity and technical documentation without adding evaluator-specific navigation. Network and wallet status remain visible beside the current task.
+Use compact horizontal navigation, retaining visible labels on mobile. Separate the treasury, available liquidity and technical documentation without adding evaluator-specific navigation. Network and wallet status remain visible beside the current task.
 
-Creation is a decision workbench: allocation and policy controls sit beside the consequence preview, followed by activation. Group inputs into numbered allocation, limits and activation sections. Use a high-contrast summary for the current decision and quieter surfaces for the underlying assumptions. Do not bury the rehearsal behind a second dashboard. On mobile, controls precede their results and activation; no content depends on a fixed-width canvas.
+Creation is guided through allocation, limits and review. Show one decision stage at a time, retaining editable values when moving backward. Keep the next action beside the current inputs and place the first allocation in the first mobile viewport. Returning owners reach their positions without completing setup again.
+
+Place a compact permission preview beside setup on desktop and after the current task on mobile. Label its selectable conditions as illustrative, never live observations. At review, keep the allocation and limits visible beside activation. Historical rehearsal is optional within that review, with its verdict first and full numeric comparison in a disclosure; it must not force a long scroll to create.
 
 A selected position places inventory, actual earnings and policy state beside the next owner action or trade ticket. Keep live position accounting visually distinct from historical rehearsal. On mobile, put the next action immediately after the state summary, ahead of secondary telemetry.
 
@@ -83,7 +85,7 @@ Keep the shared restrained corner shape for working surfaces, buttons and inputs
 
 ## Components
 
-The creation workbench numbers its stages configure, rehearse, and create/activate.
+The creation workbench numbers its actual stages allocation, limits and review. Use short operational headings, not slogans or repeated eyebrow labels. Keep navigation and the wallet row compact while retaining visible names and accessible targets.
 Historical comparisons never share an unlabeled metric with actual position accounting.
 
 ### Tide gate
@@ -102,7 +104,7 @@ Separate creation from token approval and Aqua shipment; explain what each signa
 
 Use the same parsed allocation and policy settings for rehearsal and position creation. Changing inputs invalidates prior results. Present healthy, stress and recovery checkpoints as independent counterfactuals, not a continuous historical portfolio. Differentiate exact contract arithmetic, archived pool quotes and estimated transaction costs. Show adverse outcomes and unavailable quotes as prominently as favorable ones. Rehearsal neither moves tokens nor changes live observations.
 
-Use aligned comparisons for guarded trading, otherwise identical unguarded trading and a bounded direct-exit alternative. Fees remain included in inventory. Make opportunity cost, original exposure and the difference between allowed and profitable trades legible before showing technical evidence.
+Lead rehearsal with a result-specific explanation of the policy decision and why trades did or did not happen. State beside the selector that checkpoints are independent snapshots, not a continuous backtest. Keep original exposure and adverse outcomes visible before expandable arithmetic. Use an aligned comparison table on desktop and readable per-option details on mobile. Fees remain included in inventory. Exact precision stays available in the detailed comparison.
 
 ### Trade ticket
 
