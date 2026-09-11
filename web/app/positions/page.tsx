@@ -84,11 +84,9 @@ export default function Positions() {
       <main className="main-content" id="positions">
         <section className="state-intro discovery-intro">
           <div>
-            <p className="instrument-label">Market / Treasury positions</p>
-            <h1>Liquidity with a point of view.</h1>
+            <h1>Find liquidity</h1>
             <p className="state-summary">
-              Trade a treasury’s existing position. In stress, buy impaired
-              inventory with reserve tokens—only when its policy permits.
+              Choose a position and quote a trade. No wallet needed to browse.
             </p>
           </div>
         </section>
@@ -103,16 +101,14 @@ export default function Positions() {
               {loading ? 'Reading Sepolia…' : 'Refresh positions'}
             </button>
           </div>
-          <p className="action-help">
-            Latest eight registrations within 20,000 blocks, including
-            unavailable positions. Owner-controlled sample prices, not live
-            market feeds. No wallet is needed to browse.
+          <p className="discovery-context">
+            Sepolia sample market · owner-controlled prices, not live feeds.
           </p>
           <output className="maker-status">
             {loading
               ? 'Loading position states and backing…'
               : result
-                ? `${result.entries.length} positions found. Scan: blocks ${result.scannedFrom}–${result.head}.`
+                ? `${result.entries.length} ${result.entries.length === 1 ? 'position' : 'positions'} found.`
                 : ''}
           </output>
           {error && (
@@ -160,10 +156,13 @@ export default function Positions() {
                   key={hash}
                 >
                   <div>
-                    <p className="instrument-label">
-                      bUSD / rUSD · {shortenHex(hash)}
-                    </p>
-                    <h3>{state?.label ?? 'Unavailable'}</h3>
+                    <div className="market-pair">
+                      <h3>bUSD / rUSD</h3>
+                      <span className="market-state">
+                        {state?.label ?? 'Unavailable'}
+                      </span>
+                    </div>
+                    <p className="market-id">Position {shortenHex(hash)}</p>
                     <p>{state?.reason ?? entryError}</p>
                     {p && (
                       <p className="action-help">
@@ -187,19 +186,26 @@ export default function Positions() {
                         </dl>
                       </div>
                       <div className="position-open">
-                        <p className="action-help">
-                          Read at block {p.blockNumber.toString()}. Backing is
-                          not a quote or reserved liquidity. Other fills, wallet
-                          transfers and approvals can change it.
-                        </p>
                         <Link
-                          className="text-action"
+                          className={
+                            state?.tradable
+                              ? 'primary-action'
+                              : 'secondary-action'
+                          }
                           href={`/?position=${hash}`}
                           aria-label={`${state?.tradable ? 'Quote a trade' : 'View position'} ${shortenHex(hash)}`}
                         >
                           {state?.tradable ? 'Quote a trade' : 'View position'}{' '}
                           →
                         </Link>
+                        <details className="market-read-details">
+                          <summary>Backing details</summary>
+                          <p>
+                            Read at block {p.blockNumber.toString()}. Backing is
+                            not a quote or reserved liquidity. Other fills,
+                            wallet transfers and approvals can change it.
+                          </p>
+                        </details>
                       </div>
                     </>
                   )}
@@ -207,11 +213,21 @@ export default function Positions() {
               );
             })}
           </div>
-          <p className="action-help">
-            Default sample observations expire after 24h for bUSD and 25h for
-            rUSD. Only the position’s owner can update them. Refresh positions
-            reads the chain; it does not refresh sample prices.
-          </p>
+          <details className="market-method">
+            <summary>Discovery range and sample-price freshness</summary>
+            <p className="action-help">
+              Latest eight registrations within 20,000 blocks, including
+              unavailable positions.{' '}
+              {result
+                ? `Scan: blocks ${result.scannedFrom}–${result.head}.`
+                : ''}
+            </p>
+            <p className="action-help">
+              Default sample observations expire after 24h for bUSD and 25h for
+              rUSD. Only the position’s owner can update them. Refresh positions
+              reads the chain; it does not refresh sample prices.
+            </p>
+          </details>
           <p className="action-help">
             An exit needs a willing buyer and a fresh executable quote. There is
             no guaranteed exit, redemption or recovery. Creating an allocation

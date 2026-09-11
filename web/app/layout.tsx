@@ -4,6 +4,7 @@ import '@fontsource/barlow-condensed/700.css';
 import '@fontsource-variable/manrope';
 import '@fontsource/ibm-plex-mono/500.css';
 import './globals.css';
+import './workspace.css';
 import { WorkspaceNav } from './workspace-nav';
 
 export const metadata: Metadata = {
