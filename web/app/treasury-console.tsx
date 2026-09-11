@@ -30,6 +30,12 @@ import { sepolia } from 'viem/chains';
 import { ensureAllocationAllowance } from '@/lib/allocation-approval';
 import { switchToSepolia } from '@/lib/wallet-network';
 import {
+  settingsFromForm,
+  settingsKey,
+  type Settings,
+} from '@/lib/rehearsal-math';
+import { PolicyRehearsal } from './policy-rehearsal';
+import {
   buildTakerTraits,
   describeError,
   erc20Abi,
@@ -171,6 +177,13 @@ export function TreasuryConsole() {
   const [receiptHash, setReceiptHash] = useState<Hex>(),
     [showCreate, setShowCreate] = useState(true);
   const [pendingHash, setPendingHash] = useState<Hex>();
+  const [rehearsedKey, setRehearsedKey] = useState('');
+  let creationSettings: Settings | undefined;
+  try {
+    creationSettings = settingsFromForm(asset, reserve, fee, trigger, discount);
+  } catch {
+    /* Validate at submission. */
+  }
   const [settledRevision, setSettledRevision] = useState(0);
   const [tradeWallet, setTradeWallet] = useState<{
     account: Address;
@@ -524,20 +537,14 @@ export function TreasuryConsole() {
       void switchNetwork();
       return;
     }
-    let a: bigint, r: bigint;
+    let settings: Settings;
     try {
-      a = parseUnits(asset, 6);
-      r = parseUnits(reserve, 6);
-      if (
-        !/^\d+(\.\d{1,6})?$/.test(asset) ||
-        !/^\d+(\.\d{1,6})?$/.test(reserve) ||
-        a <= 0n ||
-        r <= 0n
-      )
-        throw new Error();
-    } catch {
+      settings = settingsFromForm(asset, reserve, fee, trigger, discount);
+    } catch (e) {
       setFieldError(
-        'Enter positive allocations with at most six decimal places.',
+        e instanceof Error
+          ? e.message
+          : 'Enter positive allocations with at most six decimal places.',
       );
       allocationRef.current?.focus();
       return;
@@ -551,17 +558,7 @@ export function TreasuryConsole() {
         address: d.positions,
         abi: positionsAbi,
         functionName: 'createDemo',
-        args: [
-          {
-            assetAllocation: a,
-            reserveAllocation: r,
-            feeBps: Number(fee),
-            trigger: BigInt(trigger) * 10n ** 16n,
-            discountBps: Number(discount),
-            assetMaxAge: 86400,
-            reserveMaxAge: 90000,
-          },
-        ],
+        args: [settings],
       });
       const logs = parseEventLogs({
         abi: positionsAbi,
@@ -860,13 +857,26 @@ export function TreasuryConsole() {
         </div>
       </header>
       <main className="main-content" id="treasury">
-        <section className="state-intro">
+        <section
+          className={`state-intro ${showCreate ? '' : 'position-intro'}`}
+        >
           <div>
-            <p className="instrument-label">Your treasury, your limits</p>
-            <h1>Put liquidity to work.</h1>
+            <p className="instrument-label">
+              Treasury / {showCreate ? 'New position' : 'Position overview'}
+            </p>
+            <h1>
+              {showCreate
+                ? 'Make your liquidity deliberate.'
+                : isOwner
+                  ? 'Your treasury at a glance.'
+                  : 'bUSD / rUSD'}
+            </h1>
             <p className="state-summary">
-              Earn trading fees while healthy. Stop taking on an impaired asset
-              when your policy trips.
+              {showCreate
+                ? 'Earn trading fees while healthy. Stop buying an impaired asset when your limits trip. Explore the tradeoffs before creating.'
+                : isOwner
+                  ? 'Track what you hold, what you earned, and which trades your policy permits.'
+                  : 'See what this position permits, then request a live quote.'}
             </p>
           </div>
         </section>
@@ -954,173 +964,190 @@ export function TreasuryConsole() {
             position can be created here until deployment is connected.
           </p>
         )}
-        <nav className="maker-nav" aria-label="Treasury actions">
-          <Link className="text-action" href="/positions">
-            Find liquidity
-          </Link>
-          <button className="text-action" onClick={() => setShowCreate(true)}>
-            Create position
-          </button>
-          {owned.length > 0 && (
-            <label>
-              My positions (latest 20)
-              <select
-                aria-label="Select my position"
-                value={owned.includes(selected as Hex) ? selected : ''}
-                onChange={(e) => choose(e.target.value as Hex)}
+        {(!showCreate || owned.length > 0 || selected) && (
+          <nav className="maker-nav" aria-label="Treasury actions">
+            {!showCreate && position && (
+              <a className="text-action" href="#position-actions">
+                {isOwner
+                  ? 'Go to position actions ↓'
+                  : state === 'Healthy' || state === 'Stressed'
+                    ? 'Go to trade ↓'
+                    : 'View trading status ↓'}
+              </a>
+            )}
+            {!showCreate && (
+              <button
+                className="text-action"
+                onClick={() => setShowCreate(true)}
               >
-                <option value="" disabled>
-                  Choose a position
-                </option>
-                {owned.map((hash, i) => (
-                  <option key={hash} value={hash}>
-                    {i === 0 ? 'Latest · ' : ''}
-                    {shortenHex(hash)}
+                Create position
+              </button>
+            )}
+            {owned.length > 0 && (
+              <label>
+                My positions (latest 20)
+                <select
+                  aria-label="Select my position"
+                  value={owned.includes(selected as Hex) ? selected : ''}
+                  onChange={(e) => choose(e.target.value as Hex)}
+                >
+                  <option value="" disabled>
+                    Choose a position
                   </option>
-                ))}
-              </select>
-            </label>
-          )}
-          {selected && (
-            <button
-              className="text-action"
-              onClick={() => setShowCreate(false)}
-            >
-              Selected position
-            </button>
-          )}
-          <Link className="text-action" href="/trade">
-            Existing public trade
-          </Link>
-        </nav>
+                  {owned.map((hash, i) => (
+                    <option key={hash} value={hash}>
+                      {i === 0 ? 'Latest · ' : ''}
+                      {shortenHex(hash)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {selected && showCreate && (
+              <button
+                className="text-action"
+                onClick={() => setShowCreate(false)}
+              >
+                Selected position
+              </button>
+            )}
+          </nav>
+        )}
         {showCreate ? (
-          <div className="console-grid">
+          <div className="creation-workbench">
             <section className="position-panel maker-panel">
-              <h2>Create a treasury position</h2>
+              <span className="eyebrow">01 / Configure</span>
+              <h2>Define your position.</h2>
               <p>
                 Choose the allocation available to Aqua. Tokens stay in your
                 wallet; you approve and ship after creating the position.
               </p>
-              <form onSubmit={create}>
-                <div className="maker-fields">
-                  <label>
-                    Asset allocation · bUSD
-                    <input
-                      ref={allocationRef}
-                      name="assetAllocation"
-                      inputMode="decimal"
-                      required
-                      aria-invalid={!!fieldError}
-                      aria-describedby={
-                        fieldError ? 'allocation-error' : undefined
-                      }
-                      value={asset}
-                      onChange={(e) => setAsset(e.target.value)}
-                    />
-                  </label>
-                  <label>
-                    Reserve allocation · rUSD
-                    <input
-                      name="reserveAllocation"
-                      inputMode="decimal"
-                      required
-                      aria-invalid={!!fieldError}
-                      aria-describedby={
-                        fieldError ? 'allocation-error' : undefined
-                      }
-                      value={reserve}
-                      onChange={(e) => setReserve(e.target.value)}
-                    />
-                  </label>
-                  <label>
-                    Healthy trading fee
-                    <select
-                      value={fee}
-                      onChange={(e) => setFee(e.target.value)}
-                    >
-                      <option value="10">0.10%</option>
-                      <option value="30">0.30%</option>
-                      <option value="100">1.00%</option>
-                    </select>
-                  </label>
-                  <label>
-                    Asset safety trigger
-                    <select
-                      value={trigger}
-                      onChange={(e) => setTrigger(e.target.value)}
-                    >
-                      <option value="98">
-                        Below $0.98 or 0.98 reserve units
-                      </option>
-                      <option value="99">
-                        Below $0.99 or 0.99 reserve units
-                      </option>
-                    </select>
-                  </label>
-                  <label>
-                    Maximum exit discount
-                    <select
-                      value={discount}
-                      onChange={(e) => setDiscount(e.target.value)}
-                    >
-                      <option value="0">0% below observation</option>
-                      <option value="25">0.25% below observation</option>
-                      <option value="50">0.50% below observation</option>
-                      <option value="100">1.00% below observation</option>
-                    </select>
-                  </label>
-                </div>
-                {fieldError && (
-                  <p
-                    id="allocation-error"
-                    role="alert"
-                    className="notice error"
-                  >
-                    {fieldError}
-                  </p>
-                )}
-                <p className="action-help">
-                  Reserve must stay within $0.98–$1.02; asset premiums above
-                  $1.02 halt trading. Observation limits: 24h asset / 25h
-                  reserve. These are owner-controlled sample feeds, not live USD
-                  prices. Changing the policy later requires a new position.
-                </p>
-                <button
-                  className="primary-action"
-                  disabled={!!busy || !!pendingHash || !d}
-                  type="submit"
+              <form id="create-position" onSubmit={create}>
+                <fieldset
+                  disabled={!!busy || !!pendingHash}
+                  className="creation-fieldset"
                 >
-                  {!account
-                    ? 'Connect wallet'
-                    : chain !== sepolia.id
-                      ? 'Switch to Sepolia'
-                      : 'Create position'}
-                </button>
+                  <legend className="sr-only">
+                    Position allocation and limits
+                  </legend>
+                  <div className="maker-fields">
+                    <label>
+                      Asset allocation · bUSD
+                      <input
+                        ref={allocationRef}
+                        name="assetAllocation"
+                        inputMode="decimal"
+                        required
+                        aria-invalid={!!fieldError}
+                        aria-describedby={
+                          fieldError ? 'allocation-error' : undefined
+                        }
+                        value={asset}
+                        onChange={(e) => setAsset(e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Reserve allocation · rUSD
+                      <input
+                        name="reserveAllocation"
+                        inputMode="decimal"
+                        required
+                        aria-invalid={!!fieldError}
+                        aria-describedby={
+                          fieldError ? 'allocation-error' : undefined
+                        }
+                        value={reserve}
+                        onChange={(e) => setReserve(e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Healthy trading fee
+                      <select
+                        value={fee}
+                        onChange={(e) => setFee(e.target.value)}
+                      >
+                        <option value="10">0.10%</option>
+                        <option value="30">0.30%</option>
+                        <option value="100">1.00%</option>
+                      </select>
+                    </label>
+                    <label>
+                      Asset safety trigger
+                      <select
+                        value={trigger}
+                        onChange={(e) => setTrigger(e.target.value)}
+                      >
+                        <option value="98">
+                          Below $0.98 or 0.98 reserve units
+                        </option>
+                        <option value="99">
+                          Below $0.99 or 0.99 reserve units
+                        </option>
+                      </select>
+                    </label>
+                    <label>
+                      Maximum exit discount
+                      <select
+                        value={discount}
+                        onChange={(e) => setDiscount(e.target.value)}
+                      >
+                        <option value="0">0% below observation</option>
+                        <option value="25">0.25% below observation</option>
+                        <option value="50">0.50% below observation</option>
+                        <option value="100">1.00% below observation</option>
+                      </select>
+                    </label>
+                  </div>
+                  {fieldError && (
+                    <p
+                      id="allocation-error"
+                      role="alert"
+                      className="notice error"
+                    >
+                      {fieldError}
+                    </p>
+                  )}
+                  <p className="action-help">
+                    Reserve must stay within $0.98–$1.02; asset premiums above
+                    $1.02 halt trading. Observation limits: 24h asset / 25h
+                    reserve. These are owner-controlled sample feeds, not live
+                    USD prices. Changing the policy later requires a new
+                    position.
+                  </p>
+                </fieldset>
               </form>
             </section>
-            <aside className="trade-ticket">
-              <h2>Control the whole position</h2>
-              <p>
-                Healthy trades retain fees. Stressed trades may reduce asset
-                exposure. Unsafe reserve prices or stale observations halt
-                trading.
-              </p>
-              <p>
-                You can cancel your Aqua allocation at any time. An exit
-                discount limits the price against an accepted observation—not
-                your total loss.
-              </p>
-              <h3>Test the lifecycle</h3>
-              <p>
-                Creation gives your position its own sample-price controls. Only
-                its owner can change those observations. Share the position link
-                so another wallet can trade against it.
-              </p>
-              <p>
-                Fees require actual trades; earnings and exit availability are
-                not guaranteed.
-              </p>
-            </aside>
+            <PolicyRehearsal
+              settings={creationSettings}
+              onReviewed={setRehearsedKey}
+            />
+            <section className="activation-panel">
+              <div className="activation-heading">
+                <span className="eyebrow">03 / Create & activate</span>
+                <h2>Ready to put it to work?</h2>
+                <p>
+                  {creationSettings &&
+                  rehearsedKey === settingsKey(creationSettings)
+                    ? 'These are the settings used in your rehearsal.'
+                    : 'Your allocation and limits become immutable when you create.'}{' '}
+                  Creating deploys your position. Two token approvals and
+                  shipping to Aqua follow in separate wallet confirmations.
+                  Rehearsal is optional.
+                </p>
+              </div>
+              <button
+                className="primary-action"
+                disabled={!!busy || !!pendingHash || !d}
+                type="submit"
+                form="create-position"
+              >
+                {!account
+                  ? 'Connect wallet'
+                  : chain !== sepolia.id
+                    ? 'Switch to Sepolia'
+                    : 'Create this position'}
+              </button>
+            </section>
           </div>
         ) : (
           <>
@@ -1141,8 +1168,10 @@ export function TreasuryConsole() {
                 </button>
               </section>
             ) : (
-              <div className="console-grid">
-                <section className="position-panel maker-panel">
+              <div className="console-grid treasury-grid">
+                <section
+                  className={`position-panel maker-panel position-decision decision-${state.toLowerCase()}`}
+                >
                   <div className="maker-heading">
                     <div>
                       <p className="instrument-label">
@@ -1150,7 +1179,24 @@ export function TreasuryConsole() {
                           ? 'Your treasury position'
                           : 'Treasury position'}
                       </p>
-                      <h2>{state}</h2>
+                      <h2>
+                        {state === 'Healthy'
+                          ? 'Earn on both sides.'
+                          : state === 'Stressed'
+                            ? 'Stop buying the depeg.'
+                            : state === 'Halted'
+                              ? 'Trading is paused.'
+                              : state === 'Draft'
+                                ? 'One step closer to trading.'
+                                : 'This position is closed.'}
+                      </h2>
+                      <span className="decision-label">
+                        {state} · bUSD / rUSD
+                      </span>
+                      <p className="position-owner">
+                        Owner {shortenHex(position.owner)}
+                        {isOwner ? ' · your wallet' : ''}
+                      </p>
                     </div>
                     <button
                       className="text-action"
@@ -1192,157 +1238,42 @@ export function TreasuryConsole() {
                       )}
                     </div>
                   )}
-                  <dl className="maker-metrics">
-                    <div>
-                      <dt>Remaining allocation · bUSD</dt>
-                      <dd>{tokens(position.assetBalance)}</dd>
-                    </div>
-                    <div>
-                      <dt>Remaining allocation · rUSD</dt>
-                      <dd>{tokens(position.reserveBalance)}</dd>
-                    </div>
-                    <div>
-                      <dt>Healthy fees earned · bUSD</dt>
-                      <dd>{tokens(position.accounting[0])}</dd>
-                    </div>
-                    <div>
-                      <dt>Healthy fees earned · rUSD</dt>
-                      <dd>{tokens(position.accounting[1])}</dd>
-                    </div>
-                    <div>
-                      <dt>Asset exited · bUSD</dt>
-                      <dd>{tokens(position.accounting[4])}</dd>
-                    </div>
-                    <div>
-                      <dt>Exit proceeds · rUSD</dt>
-                      <dd>{tokens(position.accounting[5])}</dd>
-                    </div>
-                  </dl>
-                  <p className="action-help">
-                    Fees are settled token amounts retained by the owner, not
-                    APY or total profit. Inventory remains exposed to asset
-                    prices. {position.accounting[2].toString()} healthy trades ·{' '}
-                    {position.accounting[3].toString()} exits.
-                  </p>
-                  <p className="action-help">
-                    Self-trades do not establish outside revenue or reduced
-                    total wallet exposure. Fees and exit proceeds are historical
-                    flows, not extra balances to add to the remaining
-                    allocation.
-                  </p>
-                  <dl
-                    className="maker-metrics"
-                    aria-label="Physical wallet backing"
-                  >
-                    <div>
-                      <dt>Owner wallet · bUSD</dt>
-                      <dd>{tokens(position.assetWallet)}</dd>
-                    </div>
-                    <div>
-                      <dt>Owner wallet · rUSD</dt>
-                      <dd>{tokens(position.reserveWallet)}</dd>
-                    </div>
-                    <div>
-                      <dt>Backed output · bUSD</dt>
-                      <dd>{tokens(position.assetAvailable)}</dd>
-                    </div>
-                    <div>
-                      <dt>Backed output · rUSD</dt>
-                      <dd>{tokens(position.reserveAvailable)}</dd>
-                    </div>
-                  </dl>
-                  <p className="action-help">
-                    At block {position.blockNumber.toString()}. Backed output is
-                    capped by this allocation, wallet balance and Aqua
-                    allowance. It is shared backing, not reserved liquidity or
-                    guaranteed proceeds. Other strategies and wallet transfers
-                    can change it.
-                  </p>
                   <div
-                    className="maker-gate"
+                    className="direction-strip"
                     aria-label="Permitted trade directions"
                   >
                     <p>
-                      bUSD → treasury → rUSD{' '}
-                      <strong>{state === 'Healthy' ? 'Open' : 'Closed'}</strong>
+                      <span>Treasury buys bUSD</span>
+                      <strong>
+                        {state === 'Healthy' ? 'Permitted' : 'Blocked'}
+                      </strong>
                     </p>
                     <p>
-                      rUSD → treasury → bUSD{' '}
+                      <span>Treasury sells bUSD</span>
                       <strong>
                         {state === 'Healthy' || state === 'Stressed'
-                          ? 'Permitted, subject to liquidity'
-                          : 'Closed'}
+                          ? 'Permitted within policy'
+                          : 'Blocked'}
                       </strong>
                     </p>
                   </div>
-                  <dl className="maker-metrics">
-                    <div>
-                      <dt>Asset observation</dt>
-                      <dd>{usd(position.assetObservedUsd)}</dd>
-                      <small>
-                        {age(position.assetRound)} · max{' '}
-                        {position.assetMaxAge / 3600}h
-                      </small>
-                    </div>
-                    <div>
-                      <dt>Reserve observation</dt>
-                      <dd>{usd(position.reserveObservedUsd)}</dd>
-                      <small>
-                        {age(position.reserveRound)} · max{' '}
-                        {position.reserveMaxAge / 3600}h
-                      </small>
-                    </div>
-                  </dl>
-                  <p>
-                    Healthy fee {percent(position.feeBps)} · trigger{' '}
-                    {Number(formatUnits(position.trigger, 18)).toFixed(2)} USD
-                    and reserve units · exit discount{' '}
-                    {percent(position.discount)}.
-                  </p>
                   <p className="action-help">
-                    An accepted observation may lag the market. The exit
-                    discount is not a cap on total loss. Testnet sample prices
-                    can be refreshed only by this position’s owner.
+                    Trading still needs backing, a willing counterparty and a
+                    fresh quote.
                   </p>
-                  <label className="maker-share">
-                    Share this position
-                    <input
-                      readOnly
-                      value={
-                        typeof window === 'undefined'
-                          ? ''
-                          : `${window.location.origin}/?position=${position.hash}`
-                      }
-                      onFocus={(e) => e.target.select()}
-                    />
-                  </label>
-                  <details className="signing-details">
-                    <summary>Position and permissions</summary>
-                    <p>
-                      Aqua approval spender: <code>{d?.aqua}</code>
-                    </p>
-                    <p>
-                      Trade approval spender: <code>{d?.router}</code>
-                    </p>
-                    <p>
-                      Owner: <code>{position.owner}</code>
-                    </p>
-                    <p>
-                      Order: <code>{position.hash}</code>
-                    </p>
-                    <p>
-                      Policy: <code>{position.policy}</code>
-                    </p>
-                    <p>Read at block {position.blockNumber.toString()}.</p>
-                    <p>
-                      Currently backed output: {tokens(position.assetAvailable)}{' '}
-                      bUSD / {tokens(position.reserveAvailable)} rUSD. Other
-                      Aqua allocations can share the owner’s wallet; these are
-                      not segregated reserves.
-                    </p>
-                  </details>
                 </section>
-                <aside className="trade-ticket">
+                <aside
+                  className="trade-ticket position-actions"
+                  id="position-actions"
+                  aria-label={
+                    isOwner ? 'Position actions' : 'Trade this position'
+                  }
+                >
+                  <span className="eyebrow">
+                    {isOwner
+                      ? 'Your next action'
+                      : 'Trade / separate counterparty'}
+                  </span>
                   {isOwner && !position.shipped && !position.cancelled ? (
                     <>
                       <h2>Activate your allocation</h2>
@@ -1401,7 +1332,7 @@ export function TreasuryConsole() {
                         custodial deposit occurs.
                       </p>
                     </>
-                  ) : position.shipped ? (
+                  ) : position.shipped && state !== 'Halted' ? (
                     <>
                       <h2>
                         {state === 'Stressed'
@@ -1532,15 +1463,28 @@ export function TreasuryConsole() {
                   ) : (
                     <>
                       <h2>
-                        {position.cancelled
-                          ? 'Position closed'
-                          : 'Not trading yet'}
+                        {state === 'Halted'
+                          ? 'Trading unavailable'
+                          : position.cancelled
+                            ? 'Position closed'
+                            : 'Not trading yet'}
                       </h2>
                       <p>
-                        {position.cancelled
-                          ? 'Create a new position to allocate liquidity again.'
-                          : 'This owner has not shipped their position to Aqua.'}
+                        {state === 'Halted'
+                          ? 'Both trade directions are blocked by the policy. Connecting a wallet or refreshing a quote cannot override it. The owner must supply valid observations before trading can resume.'
+                          : position.cancelled
+                            ? 'Create a new position to allocate liquidity again.'
+                            : 'This owner has not shipped their position to Aqua.'}
                       </p>
+                      {state === 'Halted' && (
+                        <button
+                          className="text-action"
+                          disabled={loading || !!busy}
+                          onClick={() => void refresh()}
+                        >
+                          Recheck policy
+                        </button>
+                      )}
                     </>
                   )}
                   {isOwner && position.scenario !== zeroAddress && (
@@ -1614,6 +1558,149 @@ export function TreasuryConsole() {
                     </section>
                   )}
                 </aside>
+                <section
+                  className="position-panel maker-panel position-accounting"
+                  aria-labelledby="inventory-heading"
+                >
+                  <span className="eyebrow">Treasury allocation / onchain</span>
+                  <h2 id="inventory-heading">Where the assets stand.</h2>
+                  <dl className="maker-metrics">
+                    <div>
+                      <dt>Remaining allocation · bUSD</dt>
+                      <dd>{tokens(position.assetBalance)}</dd>
+                    </div>
+                    <div>
+                      <dt>Remaining allocation · rUSD</dt>
+                      <dd>{tokens(position.reserveBalance)}</dd>
+                    </div>
+                    <div>
+                      <dt>Healthy fees earned · bUSD</dt>
+                      <dd>{tokens(position.accounting[0])}</dd>
+                    </div>
+                    <div>
+                      <dt>Healthy fees earned · rUSD</dt>
+                      <dd>{tokens(position.accounting[1])}</dd>
+                    </div>
+                    <div>
+                      <dt>Asset exited · bUSD</dt>
+                      <dd>{tokens(position.accounting[4])}</dd>
+                    </div>
+                    <div>
+                      <dt>Exit proceeds · rUSD</dt>
+                      <dd>{tokens(position.accounting[5])}</dd>
+                    </div>
+                  </dl>
+                  <p className="action-help">
+                    Fees are settled token amounts retained by the owner, not
+                    APY or total profit. Inventory remains exposed to asset
+                    prices. {position.accounting[2].toString()} healthy trades ·{' '}
+                    {position.accounting[3].toString()} exits.
+                  </p>
+                  <p className="action-help">
+                    Self-trades do not establish outside revenue or reduced
+                    total wallet exposure. Fees and exit proceeds are historical
+                    flows, not extra balances to add to the remaining
+                    allocation.
+                  </p>
+                  <details className="backing-details">
+                    <summary>Wallet backing & allowances</summary>
+                    <dl
+                      className="maker-metrics"
+                      aria-label="Physical wallet backing"
+                    >
+                      <div>
+                        <dt>Owner wallet · bUSD</dt>
+                        <dd>{tokens(position.assetWallet)}</dd>
+                      </div>
+                      <div>
+                        <dt>Owner wallet · rUSD</dt>
+                        <dd>{tokens(position.reserveWallet)}</dd>
+                      </div>
+                      <div>
+                        <dt>Backed output · bUSD</dt>
+                        <dd>{tokens(position.assetAvailable)}</dd>
+                      </div>
+                      <div>
+                        <dt>Backed output · rUSD</dt>
+                        <dd>{tokens(position.reserveAvailable)}</dd>
+                      </div>
+                    </dl>
+                    <p className="action-help">
+                      At block {position.blockNumber.toString()}. Backed output
+                      is capped by this allocation, wallet balance and Aqua
+                      allowance. It is shared backing, not reserved liquidity or
+                      guaranteed proceeds. Other strategies and wallet transfers
+                      can change it.
+                    </p>
+                  </details>
+                  <h3>Observations & limits</h3>
+                  <dl className="maker-metrics">
+                    <div>
+                      <dt>Asset observation</dt>
+                      <dd>{usd(position.assetObservedUsd)}</dd>
+                      <small>
+                        {age(position.assetRound)} · max{' '}
+                        {position.assetMaxAge / 3600}h
+                      </small>
+                    </div>
+                    <div>
+                      <dt>Reserve observation</dt>
+                      <dd>{usd(position.reserveObservedUsd)}</dd>
+                      <small>
+                        {age(position.reserveRound)} · max{' '}
+                        {position.reserveMaxAge / 3600}h
+                      </small>
+                    </div>
+                  </dl>
+                  <p>
+                    Healthy fee {percent(position.feeBps)} · trigger{' '}
+                    {Number(formatUnits(position.trigger, 18)).toFixed(2)} USD
+                    and reserve units · exit discount{' '}
+                    {percent(position.discount)}.
+                  </p>
+                  <p className="action-help">
+                    An accepted observation may lag the market. The exit
+                    discount is not a cap on total loss. Testnet sample prices
+                    can be refreshed only by this position’s owner.
+                  </p>
+                  <label className="maker-share">
+                    Share this position
+                    <input
+                      readOnly
+                      value={
+                        typeof window === 'undefined'
+                          ? ''
+                          : `${window.location.origin}/?position=${position.hash}`
+                      }
+                      onFocus={(e) => e.target.select()}
+                    />
+                  </label>
+                  <details className="signing-details">
+                    <summary>Position and permissions</summary>
+                    <p>
+                      Aqua approval spender: <code>{d?.aqua}</code>
+                    </p>
+                    <p>
+                      Trade approval spender: <code>{d?.router}</code>
+                    </p>
+                    <p>
+                      Owner: <code>{position.owner}</code>
+                    </p>
+                    <p>
+                      Order: <code>{position.hash}</code>
+                    </p>
+                    <p>
+                      Policy: <code>{position.policy}</code>
+                    </p>
+                    <p>Read at block {position.blockNumber.toString()}.</p>
+                    <p>
+                      Currently backed output: {tokens(position.assetAvailable)}{' '}
+                      bUSD / {tokens(position.reserveAvailable)} rUSD. Other
+                      Aqua allocations can share the owner’s wallet; these are
+                      not segregated reserves.
+                    </p>
+                  </details>
+                </section>
               </div>
             )}
           </>

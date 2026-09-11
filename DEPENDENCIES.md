@@ -65,6 +65,20 @@ updated on September 7, 2026; the upstream license texts remain unchanged.
 
 ## License preservation
 
+### Browser rehearsal arithmetic
+
+`web/lib/rehearsal-math.ts` translates the pinned SwapVM `PeggedSwapMath.sol`,
+`PeggedSwap.sol`, and `Fee.sol` integer rounding into TypeScript BigInt for new,
+fully backed six-decimal maker positions. The wrapper policy checks match
+`BreakwaterPolicy.sol`. This subset is not a general SwapVM interpreter and
+does not replace an executable quote. `test/RehearsalParity.test.ts` compares
+the port with actual local Aqua/SwapVM maker orders. The source pin, upstream
+copyright and SwapVM license remain applicable; see `THIRD_PARTY_NOTICES`.
+
+Historical rehearsal uses the existing viem dependency with fixed public
+archive providers (Blast, then dRPC), fixed mainnet contracts and four fixed
+block hashes. No API key, paid service, new package or runtime AI model is used.
+
 Aqua and SwapVM use Degensoft source licenses rather than a standard permissive
 license. Their license files and third-party notices must remain intact. New
 Breakwater code must not imply that the upstream components are relicensed.

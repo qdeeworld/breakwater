@@ -46,6 +46,13 @@ License: LicenseRef-Degensoft-SwapVM-1.1
 Copyright: © 2025 Degensoft Ltd
 License: /LICENSES/SwapVM-1.1.txt
 
+Modified/translated material (September 11, 2026):
+web/lib/rehearsal-math.ts ports the pinned SwapVM PeggedSwapMath, PeggedSwap,
+and Fee integer arithmetic to TypeScript BigInt for a bounded, read-only
+counterfactual. This is not an independently authored pricing formula or a
+replacement for SwapVM execution. Copyright © 2025 Degensoft Ltd and the
+SwapVM-1.1 license continue to apply to the derived material.
+
 ================================================================================
 
 Component: @1inch/swap-vm-sdk

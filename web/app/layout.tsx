@@ -4,6 +4,7 @@ import '@fontsource/barlow-condensed/700.css';
 import '@fontsource-variable/manrope';
 import '@fontsource/ibm-plex-mono/500.css';
 import './globals.css';
+import { WorkspaceNav } from './workspace-nav';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://breakwater.dolepee.com'),
@@ -48,7 +49,15 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <a className="skip-link" href="#workspace-content">
+          Skip to workspace
+        </a>
+        <WorkspaceNav />
+        <div className="workspace-content" id="workspace-content" tabIndex={-1}>
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

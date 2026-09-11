@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Breakwater Marine Instrument
-description: A daylight treasury console for owner-created liquidity, earned fees and explicit trading limits.
+description: A treasury decision workspace joining allocation, policy rehearsal and live position management.
 colors:
   fog: "#EAF2F5"
   primary: "#072A40"
@@ -40,11 +40,11 @@ spacing:
 
 Breakwater lets a treasury owner create productive Aqua liquidity with explicit risk limits. Ownership, actual fees and understandable policy changes lead the experience; trading against a position is the complementary participant journey.
 
-This is an operational instrument, not a protocol landing page. The owner chooses allocation and policy, approves and ships, observes earnings and remaining exposure, and can cancel. Aqua/SwapVM enforce ordinary trades and bounded stressed exits. Atomic clearing is optional rather than the primary product promise.
+This is an operational instrument, not a protocol landing page. The owner chooses allocation and policy, rehearses their consequences, approves and ships, observes earnings and remaining exposure, and can cancel. Aqua/SwapVM enforce ordinary trades and bounded stressed exits. Atomic clearing is optional rather than the primary product promise.
 
 ### Visual thesis
 
-Use the visual language of a daylight marine control panel: pale fogged surfaces, deep harbor ink, thin structural rules, condensed instrument labels, and precise monospaced readings. The signature element is a horizontal **tide gate** joining the two asset reservoirs. It visualizes the actual guard state rather than decorating it.
+Use the visual language of a daylight marine control panel: pale fogged surfaces, deep harbor ink, thin structural rules, condensed instrument labels, and precise monospaced readings. The owner workspace expresses the **tide gate** as paired permitted/blocked treasury directions; the earlier public trade surface retains the reservoir diagram. Both express actual guard state rather than decoration.
 
 Avoid the familiar dark crypto-terminal treatment, glass cards, neon gradients, oversized marketing headlines, floating token art, and soft pill-shaped containers. Depth comes from hierarchy, borders, and tonal surface changes, not blur or heavy shadow.
 
@@ -65,7 +65,11 @@ Use the display face for position states, asset symbols and principal amounts; b
 
 ## Layout
 
-The first viewport begins with a compact identity row, network and wallet status, then the owner's positions and a clear creation action. Place allocation and policy together during creation. A selected position places inventory, actual earnings and policy state beside the next owner action or trade ticket. On mobile, put that next action immediately after the state summary, ahead of secondary telemetry.
+Use a persistent navigation rail on desktop and a compact horizontal navigation on mobile. Separate the treasury, available liquidity and technical documentation without adding evaluator-specific navigation. Network and wallet status remain visible beside the current task.
+
+Creation is a decision workbench: allocation and policy controls sit beside the consequence preview, followed by activation. Group inputs into numbered allocation, limits and activation sections. Use a high-contrast summary for the current decision and quieter surfaces for the underlying assumptions. Do not bury the rehearsal behind a second dashboard. On mobile, controls precede their results and activation; no content depends on a fixed-width canvas.
+
+A selected position places inventory, actual earnings and policy state beside the next owner action or trade ticket. Keep live position accounting visually distinct from historical rehearsal. On mobile, put the next action immediately after the state summary, ahead of secondary telemetry.
 
 Use the shared spacing unit and grouped gaps. Keep related readings tighter than independent component groups and major sections.
 
@@ -79,6 +83,9 @@ Keep the shared restrained corner shape for working surfaces, buttons and inputs
 
 ## Components
 
+The creation workbench numbers its stages configure, rehearse, and create/activate.
+Historical comparisons never share an unlabeled metric with actual position accounting.
+
 ### Tide gate
 
 Show two labeled asset reservoirs connected by a central guard gate. Healthy permits two-way trading; stressed closes impaired-asset inflow and permits exposure-reducing trades; an unsafe reserve or invalid observations halt both. An allowed direction is not a guaranteed available exit: insufficient inventory, allowance or liquidity must remain visible. Animate only actual state changes and disable motion under reduced-motion preferences.
@@ -90,6 +97,12 @@ Lead with the actual state, including draft, healthy, stressed, halted and cance
 ### Owner controls and earnings
 
 Separate creation from token approval and Aqua shipment; explain what each signature authorizes. Cancelling removes the Aqua allocation without implying a custodial withdrawal. Show settled healthy fees separately from exit proceeds, remaining token exposure and price gains or losses. Keep policy choices immutable for an existing order and explain that changes require cancellation and a new position.
+
+### Policy rehearsal
+
+Use the same parsed allocation and policy settings for rehearsal and position creation. Changing inputs invalidates prior results. Present healthy, stress and recovery checkpoints as independent counterfactuals, not a continuous historical portfolio. Differentiate exact contract arithmetic, archived pool quotes and estimated transaction costs. Show adverse outcomes and unavailable quotes as prominently as favorable ones. Rehearsal neither moves tokens nor changes live observations.
+
+Use aligned comparisons for guarded trading, otherwise identical unguarded trading and a bounded direct-exit alternative. Fees remain included in inventory. Make opportunity cost, original exposure and the difference between allowed and profitable trades legible before showing technical evidence.
 
 ### Trade ticket
 

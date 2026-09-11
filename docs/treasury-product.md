@@ -9,6 +9,10 @@ production system.
 
 ## Ownership and settlement
 
+Before creating, an owner can [rehearse the selected allocation and limits](policy-rehearsal.md)
+without a wallet. This is a historical numeric counterfactual, not a current quote
+or an automated recommendation. It does not change the Sepolia sample feeds.
+
 1. A wallet creates an immutable policy and order with its chosen allocation,
    healthy fee (0–100 conventional basis points), trigger (0.98–1.00) and exit
    discount (0–100 basis points). The directory records the caller as maker.

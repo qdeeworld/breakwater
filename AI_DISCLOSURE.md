@@ -29,6 +29,19 @@ a claim that the upstream implementation was created by Codex.
 
 ## Human contribution
 
+### September 11 policy rehearsal and interface redesign
+
+Qdee requested a bounded policy-rehearsal feasibility spike followed by a major
+UI/UX redesign, with the spike completed first. Codex generated and revised
+`web/lib/rehearsal-math.ts`, `web/lib/rehearsal.ts`, `web/lib/rehearsal-quote.ts`,
+`web/lib/rehearsal-history.json`, `web/test/rehearsal.test.mjs`,
+`test/RehearsalParity.test.ts`, `web/app/policy-rehearsal.tsx`,
+`web/app/workspace-nav.tsx`, and the treasury, discovery, layout, stylesheet and
+`DESIGN.md` changes. The historical data are extracted from the earlier
+disclosed guard-benefit study; the curve math is a translation of pinned
+SwapVM code, not a new original pricing formula. Browser checks and automated
+tests are engineering evidence, not independent customer validation.
+
 ### September 8 owner-lifecycle extension
 
 Codex generated and revised `BreakwaterMakerAMM.sol`, `BreakwaterPolicy.sol`,
