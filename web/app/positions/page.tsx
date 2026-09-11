@@ -76,6 +76,7 @@ export default function Positions() {
           </span>
           Breakwater
         </Link>
+        <span className="network-chip">Sepolia · no-value test tokens</span>
         <Link className="text-action" href="/">
           Create a position
         </Link>
@@ -83,8 +84,8 @@ export default function Positions() {
       <main className="main-content" id="positions">
         <section className="state-intro discovery-intro">
           <div>
-            <p className="instrument-label">Sepolia · no-value test tokens</p>
-            <h1>Find liquidity.</h1>
+            <p className="instrument-label">Market / Treasury positions</p>
+            <h1>Liquidity with a point of view.</h1>
             <p className="state-summary">
               Trade a treasury’s existing position. In stress, buy impaired
               inventory with reserve tokens—only when its policy permits.
@@ -153,40 +154,53 @@ export default function Positions() {
                   })
                 : undefined;
               return (
-                <article className="position-panel maker-panel" key={hash}>
-                  <p className="instrument-label">
-                    bUSD / rUSD · {shortenHex(hash)}
-                  </p>
-                  <h3>{state?.label ?? 'Unavailable'}</h3>
-                  <p>{state?.reason ?? entryError}</p>
-                  {p && (
-                    <>
+                <article
+                  className="position-panel maker-panel"
+                  data-state={state?.label}
+                  key={hash}
+                >
+                  <div>
+                    <p className="instrument-label">
+                      bUSD / rUSD · {shortenHex(hash)}
+                    </p>
+                    <h3>{state?.label ?? 'Unavailable'}</h3>
+                    <p>{state?.reason ?? entryError}</p>
+                    {p && (
                       <p className="action-help">
                         Owner {shortenHex(p.owner)} · healthy fee{' '}
                         {(p.feeBps / 100).toFixed(2)}%
                       </p>
-                      <dl className="maker-metrics">
-                        <div>
-                          <dt>Backed bUSD output</dt>
-                          <dd>{amount(p.assetAvailable)}</dd>
-                        </div>
-                        <div>
-                          <dt>Backed rUSD output</dt>
-                          <dd>{amount(p.reserveAvailable)}</dd>
-                        </div>
-                      </dl>
-                      <p className="action-help">
-                        Read at block {p.blockNumber.toString()}. Backing is not
-                        a quote or reserved liquidity. Other fills, wallet
-                        transfers and approvals can change it.
-                      </p>
-                      <Link
-                        className="text-action"
-                        href={`/?position=${hash}`}
-                        aria-label={`${state?.tradable ? 'Quote a trade' : 'View position'} ${shortenHex(hash)}`}
-                      >
-                        {state?.tradable ? 'Quote a trade' : 'View position'} →
-                      </Link>
+                    )}
+                  </div>
+                  {p && (
+                    <>
+                      <div className="liquidity-backing">
+                        <dl className="maker-metrics">
+                          <div>
+                            <dt>Backed bUSD output</dt>
+                            <dd>{amount(p.assetAvailable)}</dd>
+                          </div>
+                          <div>
+                            <dt>Backed rUSD output</dt>
+                            <dd>{amount(p.reserveAvailable)}</dd>
+                          </div>
+                        </dl>
+                      </div>
+                      <div className="position-open">
+                        <p className="action-help">
+                          Read at block {p.blockNumber.toString()}. Backing is
+                          not a quote or reserved liquidity. Other fills, wallet
+                          transfers and approvals can change it.
+                        </p>
+                        <Link
+                          className="text-action"
+                          href={`/?position=${hash}`}
+                          aria-label={`${state?.tradable ? 'Quote a trade' : 'View position'} ${shortenHex(hash)}`}
+                        >
+                          {state?.tradable ? 'Quote a trade' : 'View position'}{' '}
+                          →
+                        </Link>
+                      </div>
                     </>
                   )}
                 </article>

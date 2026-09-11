@@ -1,0 +1,54 @@
+[
+  {
+    "phase": "pre-shock",
+    "block": 16794061,
+    "blockHash": "0x58a4b7c7fb0f7e0757de582730dbff58563cf1468dba52934d3ac53c097edc6a",
+    "timestamp": 1678406399,
+    "assetUsd": "1000000000000000000",
+    "reserveUsd": "999900000000000000",
+    "assetAge": 64764,
+    "reserveAge": 12768,
+    "marketRatioE18": "999946072470558287",
+    "gasPriceWei": "28098007542",
+    "ethUsd": "1439255300000000000000"
+  },
+  {
+    "phase": "stress",
+    "block": 16802331,
+    "blockHash": "0xd701fd1a80d39f8de2070b0fd3bb68402f17176d0c53a8892a28d50c80201c9a",
+    "timestamp": 1678507199,
+    "assetUsd": "945948390000000000",
+    "reserveUsd": "1006400000000000000",
+    "assetAge": 72,
+    "reserveAge": 2760,
+    "marketRatioE18": "941161237511895769",
+    "gasPriceWei": "212121236636",
+    "ethUsd": "1469100000000000000000"
+  },
+  {
+    "phase": "trough-window",
+    "block": 16803515,
+    "blockHash": "0x8f93de39b45544b039cadd1285115a56a2d2693df7f854f87e24d92ecd573302",
+    "timestamp": 1678521599,
+    "assetUsd": "883300000000000000",
+    "reserveUsd": "1006253200000000000",
+    "assetAge": 396,
+    "reserveAge": 3504,
+    "marketRatioE18": "871337185404403405",
+    "gasPriceWei": "305274185887",
+    "ethUsd": "1427890000000000000000"
+  },
+  {
+    "phase": "recovery",
+    "block": 16818931,
+    "blockHash": "0xace6cb7af0f2da2a031f802a92d778093286765858c272e1edac1406dbb13ced",
+    "timestamp": 1678708799,
+    "assetUsd": "989915890000000000",
+    "reserveUsd": "1004648550000000000",
+    "assetAge": 8436,
+    "reserveAge": 30132,
+    "marketRatioE18": "986830831177507391",
+    "gasPriceWei": "17666678449",
+    "ethUsd": "1584221600000000000000"
+  }
+]

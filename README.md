@@ -72,6 +72,14 @@ the tester discovered it or an unassisted discovery-to-fill journey.
 
 ## Guard-benefit counterfactual
 
+The creation flow also includes a wallet-free [policy rehearsal](docs/policy-rehearsal.md).
+It applies the owner's actual numeric settings to four independent historical
+USDC/USDT checkpoints, with size-specific archived pool quotes. It separates
+contract arithmetic, assumed gas and hypothetical outcomes; missing quotes stay
+unknown. Creating afterward still activates sample bUSD/rUSD, not real USDC/USDT.
+The same parsed settings feed rehearsal and creation; no live contract is changed
+by rehearsing.
+
 A [four-checkpoint historical fork comparison](docs/guard-benefit.md) isolates
 the guard's acquisition limit against the same fee-bearing curve and an immediate
 halt/direct-exit alternative. It includes unavailable exits, recovery opportunity
