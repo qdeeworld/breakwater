@@ -10,6 +10,7 @@ import {
 } from 'viem';
 import { sepolia } from 'viem/chains';
 import manifest from './maker-deployment.json';
+import { policyError, policyErrorAbi } from './policy-error';
 import {
   deployment,
   erc20Abi,
@@ -51,15 +52,10 @@ export const positionsAbi = parseAbi([
 ]);
 export const policyAbi = [
   ...guardAbi,
+  ...policyErrorAbi,
   ...parseAbi([
     'function RESERVE_MAX_AGE() view returns (uint32)',
     'function snapshot() view returns (bool healthy,uint256 assetUsd,uint256 reserveUsd,bytes32 commitment)',
-    'error UnsafeReserve(uint256 price)',
-    'error UnsupportedAssetPremium(uint256 price)',
-    'error StaleFeed(address feed,uint256 updatedAt,uint256 currentTime,uint256 maxStaleness)',
-    'error ToxicDirectionBlocked(address badToken)',
-    'error OracleCommitmentMismatch(bytes32 supplied,bytes32 current)',
-    'error InsufficientBadTokenLiquidity(uint256 requested,uint256 available)',
   ]),
 ] as const;
 export const shipAbi = [
@@ -73,21 +69,6 @@ export const scenarioAbi = parseAbi([
   'function setScenario(uint8 state)',
   'function scenario() view returns (uint8)',
 ]);
-
-export function policyError(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  if (/UnsafeReserve/.test(message))
-    return 'Reserve outside $0.98–$1.02. Both trade directions are halted.';
-  if (/UnsupportedAssetPremium/.test(message))
-    return 'Asset above $1.02. Both trade directions are halted.';
-  if (/StaleFeed/.test(message))
-    return 'An observation exceeded its age limit. Trading is halted until fresh data arrives.';
-  if (/ToxicDirectionBlocked/.test(message))
-    return 'This trade would add impaired inventory. The policy refuses it.';
-  if (/InsufficientBadTokenLiquidity/.test(message))
-    return 'Not enough impaired inventory remains for this exit. Reduce the amount.';
-  return 'Policy data is unavailable or invalid. Trading is halted; retry the onchain read.';
-}
 
 export async function readOwnedPositions(owner: Address) {
   if (!makerDeployment) return [];

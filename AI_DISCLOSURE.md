@@ -78,6 +78,18 @@ provider tests do not establish compatibility with the tester's specific wallet.
 
 ## Reused material and development records
 
+### September 10 sample-recovery guidance
+
+Codex added an actionable unavailable-market state and explicit owner-only sample
+refresh guidance to the discovery and treasury screens. These interface changes
+do not alter sample timestamps, policy freshness limits, trading permissions,
+or contract deployments.
+
+September 11: Codex added structured/nested RPC error decoding in
+`web/lib/policy-error.ts` and regression tests, so reserve-unsafe and expired
+observations retain their specific explanations. This changes presentation,
+not the contract's safety decisions or accepted observation ages.
+
 ### September 10 guard-benefit comparison
 
 At Qdee's direction, Codex generated `test/GuardBenefitFork.test.ts`, the
