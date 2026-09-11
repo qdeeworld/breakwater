@@ -27,6 +27,17 @@
     "revert": "ToxicDirectionBlocked",
     "minedFailedTrade": false
   },
+  "preExitObservationRefresh": {
+    "scenarioTransaction": "0x1f69001657987c118646c1878aa3f44263473cbb93c53422c4edf87c846d4f78",
+    "block": 11682531,
+    "timestamp": 1789137288,
+    "status": 1,
+    "method": "Owner-called setScenario(1); mined state change, not eth_call",
+    "assetUsd": "0.94",
+    "reserveUsd": "1",
+    "observationTimestamp": 1789137288,
+    "secondsBeforeExit": 48
+  },
   "stressedExit": {
     "transaction": "0xc46bedb694393760ef351ea9b75e1160f2b959ce9a67a5392a87a9d09df1be08",
     "block": 11682535,
