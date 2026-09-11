@@ -90,6 +90,16 @@ September 11: Codex added structured/nested RPC error decoding in
 observations retain their specific explanations. This changes presentation,
 not the contract's safety decisions or accepted observation ages.
 
+### September 10 guard-benefit comparison
+
+At Qdee's direction, Codex generated `test/GuardBenefitFork.test.ts`, the
+test-only `contracts/test/BenchmarkUnprotectedPolicy.sol`, the associated raw
+fork evidence and `docs/guard-benefit.md`, and corrected the external-test
+status above. Historical market/feed values come from archive RPC reads;
+controlled lag cases explicitly use synthetic observations. This counterfactual
+does not constitute independent economic review or observed customer returns.
+The experiment does not change the public production contracts or price policy.
+
 The project imported 1inch's official `swap-vm-template` at `ad719fc`, then
 migrated to the pinned Aqua and SwapVM releases. The imported contracts,
 helpers, configuration, and license material are not original Breakwater work.

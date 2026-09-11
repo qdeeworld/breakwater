@@ -28,8 +28,12 @@ exit, reserve/co-depeg halts and cancellation were observed in the Sepolia
 and transaction links are recorded there; the earlier scripted sample was left active.
 Self-trades verify settlement and the fee ledger, not independent revenue or
 reduced aggregate wallet exposure. The earlier public taker journey remains at
-[/trade](https://breakwater.dolepee.com/trade). Independent-user completion evidence
-is pending. Project-specific work began after the
+[/trade](https://breakwater.dolepee.com/trade). A September 10
+[distinct-wallet healthy fill](https://sepolia.etherscan.io/tx/0xe3f11857d6cb3bb187a16745b1cdd604d2d354dd5f725cf700696ad46aef60a4)
+paid 1 bUSD, received 0.996975 rUSD, and retained a 0.003 bUSD fee.
+This was guided, user-reported external testing, not verified unassisted completion
+or demand. A distinct-party stressed exit on that same position remains pending.
+Project-specific work began after the
 official kickoff at `2026-09-04T16:00:00Z`; this repository was initialized at
 `2026-09-04T17:04:11Z`.
 
@@ -55,9 +59,16 @@ advertised as tradeable. Custom-feed registrations are excluded from automatic
 policy reads; the sample market only reads directory-created scenarios.
 This is bounded discovery, not an exhaustive order book or a guarantee of fills.
 The owner statement separates historical fees/proceeds, remaining virtual
-allocation and physical wallet backing. A distinct-counterparty completion of
-the discovery-to-fill path remains pending. Discovery and backing clarity were
-published on September 10; publication does not establish counterparty completion.
+allocation and physical wallet backing. The healthy receipt above proves a
+distinct sender filled the position; it does not independently establish how
+the tester discovered it or an unassisted discovery-to-fill journey.
+
+## Guard-benefit counterfactual
+
+A [four-checkpoint historical fork comparison](docs/guard-benefit.md) isolates
+the guard's acquisition limit against the same fee-bearing curve and an immediate
+halt/direct-exit alternative. It includes unavailable exits, recovery opportunity
+cost and observation lag. It is not a customer savings claim or a return guarantee.
 
 ## Primary target
 
