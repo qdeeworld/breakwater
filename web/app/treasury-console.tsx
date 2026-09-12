@@ -570,6 +570,7 @@ export function TreasuryConsole({
     setFeedbackArea('global');
     setError('');
     if (!pendingHash) {
+      setFeedbackContext({});
       setTransactionStage('idle');
       setReceiptHash(undefined);
     }
