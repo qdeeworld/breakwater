@@ -2,7 +2,13 @@
 import { WorkspaceNav } from './workspace-nav';
 import { ActionFeedback } from './action-feedback';
 import { PositionShare } from './position-share';
-import { actionHeading, type TransactionStage } from '@/lib/action-feedback';
+import {
+  actionHeading,
+  feedbackPlacement,
+  feedbackContextLabel,
+  type TransactionStage,
+  type FeedbackArea,
+} from '@/lib/action-feedback';
 
 import {
   useCallback,
@@ -188,9 +194,7 @@ export function TreasuryConsole({
   const [pendingHash, setPendingHash] = useState<Hex>();
   const [transactionStage, setTransactionStage] =
     useState<TransactionStage>('idle');
-  const [feedbackArea, setFeedbackArea] = useState<
-    'global' | 'create' | 'position' | 'faucet'
-  >('global');
+  const [feedbackArea, setFeedbackArea] = useState<FeedbackArea>('global');
   const [feedbackContext, setFeedbackContext] = useState<{
     order?: Hex;
     account?: Address;
@@ -875,18 +879,13 @@ export function TreasuryConsole({
             : 'Stressed'
     : 'Loading';
   const observation = position?.observation.value;
-  const feedbackLocation =
-    feedbackArea === 'create' && showCreate
-      ? 'create'
-      : feedbackArea === 'position' &&
-          !showCreate &&
-          position &&
-          feedbackContext.order === position.hash &&
-          feedbackContext.account?.toLowerCase() === account?.toLowerCase()
-        ? 'position'
-        : feedbackArea === 'faucet'
-          ? 'faucet'
-          : 'global';
+  const feedbackLocation = feedbackPlacement({
+    area: feedbackArea,
+    showCreate,
+    positionHash: position?.hash,
+    account,
+    context: feedbackContext,
+  });
   const feedback = (
     <ActionFeedback
       busy={busy}
@@ -896,10 +895,8 @@ export function TreasuryConsole({
       hash={receiptHash}
       stage={transactionStage}
       context={
-        feedbackLocation === 'global' &&
-        feedbackContext.order &&
-        (busy || pendingHash || receiptHash || error || status)
-          ? `For position ${shortenHex(feedbackContext.order)}${feedbackContext.account ? ` · wallet ${shortenHex(feedbackContext.account)}` : ''}`
+        feedbackLocation === 'global'
+          ? feedbackContextLabel(feedbackContext)
           : undefined
       }
     />
