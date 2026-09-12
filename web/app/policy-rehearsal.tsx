@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useState } from 'react';
 import { formatUnits } from 'viem';
-import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, ShieldCheck } from 'lucide-react';
 import {
   amount,
   healthyQuote,
@@ -406,7 +406,8 @@ export function PolicyRehearsal({
               target="_blank"
               rel="noreferrer"
             >
-              Block {checkpoints[index].block} ↗
+              Block {checkpoints[index].block}{' '}
+              <ArrowUpRight size={16} aria-hidden="true" />
             </a>
             {' · '}
             <a
@@ -414,7 +415,8 @@ export function PolicyRehearsal({
               target="_blank"
               rel="noreferrer"
             >
-              Original matched study ↗
+              Original matched study{' '}
+              <ArrowUpRight size={16} aria-hidden="true" />
             </a>
           </details>
         </div>

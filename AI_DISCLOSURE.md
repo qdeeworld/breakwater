@@ -12,8 +12,8 @@ Git commits under the maintainer's identity are not a claim of manual authorship
 of every line. AI assistance is a development tool, not a runtime component of
 the swap or guard.
 
-The following inventory covers the release through `8757567` and this disclosure
-update. Paths with inherited code include AI-assisted changes to that code, not
+The initial inventory below covers the release through `8757567`; the dated
+addenda record subsequent work. Paths with inherited code include AI-assisted changes to that code, not
 a claim that the upstream implementation was created by Codex.
 
 | Area | Files / assets | Assistance and provenance |
@@ -28,6 +28,25 @@ a claim that the upstream implementation was created by Codex.
 | Documentation and evidence | `README.md`, `DEPENDENCIES.md`, this file, `DEVELOPMENT_HISTORY.md`, and `evidence/` | AI-assisted writing and organization. Receipt/block data come from actual chain queries or explicitly labeled fork/simulation runs; prose is not additional proof. |
 
 ## Human contribution
+
+### September 12 selective-aperture identity
+
+Qdee requested a substantially stronger visual identity, reviewed three image
+directions, and selected the middle selective-aperture composition twice.
+Codex generated and revised the product homepage, matching treasury/discovery
+styles, route handling, accessibility fixes, display-only observation ages,
+metadata and regression tests. `PRODUCT.md` and `DESIGN.md` record the product
+constraints and selected system. The hero in
+`web/public/images/aperture-hero.webp` was generated and color-corrected with
+OpenAI image generation; its sidecar contains the exact final edit prompt.
+
+At Qdee's request, the Grok CLI independently reviewed a limited snapshot of
+public-source files and rendered screenshots. Its feedback was checked against
+the implementation; verified findings informed navigation, quote-announcement
+and mobile-layout fixes. Separate Codex design review compared the build with
+the approved composition. These AI reviews are not a third-party security audit,
+proof of customer demand, or a prediction of judging results. No new financial
+mechanism or contract deployment was introduced by this visual work.
 
 ### September 11 policy rehearsal and interface redesign
 

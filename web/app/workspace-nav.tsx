@@ -2,24 +2,29 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Waves,
   SlidersHorizontal,
   ArrowLeftRight,
   BookOpen,
   ArrowUpRight,
 } from 'lucide-react';
+import { ApertureMark } from './aperture-mark';
 export function WorkspaceNav() {
   const path = usePathname();
   return (
     <aside className="workspace-rail">
       <Link href="/" className="rail-brand" aria-label="Breakwater home">
-        <Waves size={32} aria-hidden="true" />
+        <ApertureMark />
         <span>
           Breakwater<small>Treasury liquidity</small>
         </span>
       </Link>
       <nav aria-label="Workspace">
-        <Link href="/" aria-current={path === '/' ? 'page' : undefined}>
+        <Link
+          href="/treasury"
+          aria-current={
+            path === '/treasury' || path === '/' ? 'page' : undefined
+          }
+        >
           <SlidersHorizontal size={19} aria-hidden="true" />
           Treasury
         </Link>

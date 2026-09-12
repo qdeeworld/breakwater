@@ -1,4 +1,5 @@
 'use client';
+import { WorkspaceNav } from './workspace-nav';
 
 import {
   useCallback,
@@ -9,7 +10,8 @@ import {
   type SubmitEvent,
 } from 'react';
 import Link from 'next/link';
-import { Waves } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Waves } from 'lucide-react';
+import { observationAge } from '@/lib/observation-age';
 import {
   createWalletClient,
   custom,
@@ -154,7 +156,13 @@ function CancelPositionDialog({
   );
 }
 
-export function TreasuryConsole() {
+export function TreasuryConsole({
+  initialPosition,
+  initialPositionError = '',
+}: {
+  initialPosition?: Hex;
+  initialPositionError?: string;
+}) {
   const [asset, setAsset] = useState('100');
   const [reserve, setReserve] = useState('100');
   const [fee, setFee] = useState('30'),
@@ -163,15 +171,17 @@ export function TreasuryConsole() {
   const [account, setAccount] = useState<Address>(),
     [chain, setChain] = useState<number>();
   const [owned, setOwned] = useState<Hex[]>([]),
-    [selected, setSelected] = useState<Hex>();
+    [selected, setSelected] = useState<Hex | undefined>(initialPosition);
   const [position, setPosition] = useState<MakerPosition>(),
-    [loading, setLoading] = useState(false);
+    [loading, setLoading] = useState(!!initialPosition && !!d);
   const [busy, setBusy] = useState(''),
     [status, setStatus] = useState(''),
     [error, setError] = useState('');
-  const [readError, setReadError] = useState('');
+  const [readError, setReadError] = useState(initialPositionError);
   const [receiptHash, setReceiptHash] = useState<Hex>(),
-    [showCreate, setShowCreate] = useState(true);
+    [showCreate, setShowCreate] = useState(
+      !initialPosition && !initialPositionError,
+    );
   const [pendingHash, setPendingHash] = useState<Hex>();
   let creationSettings: Settings | undefined;
   try {
@@ -201,7 +211,7 @@ export function TreasuryConsole() {
   }>();
   const lock = useRef(false),
     readSequence = useRef(0),
-    selectedRef = useRef<Hex | undefined>(undefined);
+    selectedRef = useRef<Hex | undefined>(initialPosition);
   const allocationRef = useRef<HTMLInputElement>(null);
   const tradeToken = d ? (assetIn ? d.badToken : d.goodToken) : undefined;
   const currentTradeWallet =
@@ -240,9 +250,11 @@ export function TreasuryConsole() {
   }, [account, tradeToken, settledRevision]);
 
   const choose = useCallback((hash: Hex) => {
+    ++readSequence.current;
     selectedRef.current = hash;
     setSelected(hash);
     setPosition(undefined);
+    setLoading(!!d);
     setQuote(undefined);
     setShowCreate(false);
     setError('');
@@ -253,7 +265,7 @@ export function TreasuryConsole() {
     window.history.replaceState(null, '', url);
   }, []);
   const refresh = useCallback(async () => {
-    if (!selected || !d) return;
+    if (!selected || !d || selectedRef.current !== selected) return;
     const sequence = ++readSequence.current;
     setLoading(true);
     try {
@@ -277,12 +289,8 @@ export function TreasuryConsole() {
   }, [selected]);
 
   useEffect(() => {
-    const hash = new URL(window.location.href).searchParams.get('position');
-    const initial = setTimeout(() => {
-      if (hash && isHex(hash) && hash.length === 66) choose(hash);
-    }, 0);
     const p = provider();
-    if (!p) return () => clearTimeout(initial);
+    if (!p) return;
     const accounts = (value: unknown) => {
       if (sessionStorage.getItem(disconnectedKey) === 'yes') return;
       const address =
@@ -309,11 +317,10 @@ export function TreasuryConsole() {
     p.on?.('accountsChanged', accounts);
     p.on?.('chainChanged', network);
     return () => {
-      clearTimeout(initial);
       p.removeListener?.('accountsChanged', accounts);
       p.removeListener?.('chainChanged', network);
     };
-  }, [choose]);
+  }, []);
   useEffect(() => {
     let active = true;
     if (account && d)
@@ -718,7 +725,9 @@ export function TreasuryConsole() {
           .catch((e) => {
             if (active)
               setQuoteError(
-                `Quote unavailable. ${message(e)} Try a smaller amount or refresh the position.`,
+                `Quote unavailable. ${message(
+                  e,
+                )} Try a smaller amount or refresh the position.`,
               );
           })
           .finally(() => {
@@ -814,12 +823,13 @@ export function TreasuryConsole() {
   const observation = position?.observation.value;
   const age = (
     round: readonly [bigint, bigint, bigint, bigint, bigint] | undefined,
-  ) => (round ? `${Math.max(0, now - Number(round[3]))}s ago` : 'Unavailable');
+  ) => (!round ? 'Unavailable' : observationAge(Number(round[3]), now));
   return (
     <div className="site-shell maker-shell">
       <a className="skip-link" href="#treasury">
         Skip to treasury
       </a>
+      <WorkspaceNav />
       <header className="topbar">
         <Link className="wordmark" href="/">
           <span className="wordmark-mark">
@@ -852,7 +862,7 @@ export function TreasuryConsole() {
           )}
         </div>
       </header>
-      <main className="main-content" id="treasury">
+      <main className="main-content" id="treasury" tabIndex={-1}>
         <section
           className={`state-intro ${showCreate ? '' : 'position-intro'}`}
         >
@@ -889,7 +899,8 @@ export function TreasuryConsole() {
               target="_blank"
               rel="noreferrer"
             >
-              View latest transaction ↗
+              View latest transaction{' '}
+              <ArrowUpRight size={16} aria-hidden="true" />
             </a>
           </p>
         )}
@@ -962,10 +973,11 @@ export function TreasuryConsole() {
             {!showCreate && position && (
               <a className="text-action" href="#position-actions">
                 {isOwner
-                  ? 'Go to position actions ↓'
+                  ? 'Go to position actions'
                   : state === 'Healthy' || state === 'Stressed'
-                    ? 'Go to trade ↓'
-                    : 'View trading status ↓'}
+                    ? 'Go to trade'
+                    : 'View trading status'}
+                <ArrowDown size={16} aria-hidden="true" />
               </a>
             )}
             {!showCreate && (
@@ -1045,7 +1057,7 @@ export function TreasuryConsole() {
                 </h2>
                 <button
                   className="text-action"
-                  disabled={loading}
+                  disabled={loading || !selected}
                   onClick={() => void refresh()}
                 >
                   Retry position read
@@ -1256,13 +1268,23 @@ export function TreasuryConsole() {
                           {assetIn ? 'bUSD' : 'rUSD'}.
                         </p>
                       )}
-                      <output id="quote-status">
+                      <output
+                        id="quote-status"
+                        aria-live="polite"
+                        aria-atomic="true"
+                      >
                         {quoting
                           ? 'Updating quote…'
                           : quoteError ||
-                            (!observation
-                              ? 'Exit unavailable: policy is halted.'
-                              : '')}
+                            (quote
+                              ? `Quote ready: ${tokens(quote.output)} ${
+                                  assetIn ? 'rUSD' : 'bUSD'
+                                }. Minimum received ${tokens(quote.minimum)} ${
+                                  assetIn ? 'rUSD' : 'bUSD'
+                                }.`
+                              : !observation
+                                ? 'Exit unavailable: policy is halted.'
+                                : '')}
                       </output>
                       <dl className="quote-terms">
                         <div>
@@ -1310,8 +1332,12 @@ export function TreasuryConsole() {
                               ? 'Reading wallet balance…'
                               : quote &&
                                   currentTradeWallet.allowance < quote.input
-                                ? `Approve ${tokens(quote.input)} ${assetIn ? 'bUSD' : 'rUSD'} for trade`
-                                : `Swap ${assetIn ? 'bUSD for rUSD' : 'rUSD for bUSD'}`}
+                                ? `Approve ${tokens(quote.input)} ${
+                                    assetIn ? 'bUSD' : 'rUSD'
+                                  } for trade`
+                                : `Swap ${
+                                    assetIn ? 'bUSD for rUSD' : 'rUSD for bUSD'
+                                  }`}
                       </button>
                       <p className="action-help">
                         If required, first approve this trade amount. Then
@@ -1543,7 +1569,7 @@ export function TreasuryConsole() {
                       value={
                         typeof window === 'undefined'
                           ? ''
-                          : `${window.location.origin}/?position=${position.hash}`
+                          : `${window.location.origin}/treasury?position=${position.hash}`
                       }
                       onFocus={(e) => e.target.select()}
                     />
@@ -1615,7 +1641,7 @@ export function TreasuryConsole() {
           target="_blank"
           rel="noreferrer"
         >
-          Source and limitations ↗
+          Source and limitations <ArrowUpRight size={16} aria-hidden="true" />
         </a>
       </footer>
     </div>

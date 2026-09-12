@@ -33,6 +33,9 @@ lerna-debug.log*
 # Secrets
 .env
 
+# Local visual exploration and private review evidence
+.impeccable/
+
 # Local-only deployments
 deployments/localhost/
 deployments/hardhat/

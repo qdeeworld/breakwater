@@ -8,6 +8,7 @@ import {
   LockKeyhole,
   ShieldCheck,
 } from 'lucide-react';
+import { ApertureMark } from './aperture-mark';
 import {
   settingsFromForm,
   settingsKey,
@@ -303,7 +304,7 @@ export function CreationGuide({ allocationRef, ...p }: Props) {
       </section>
       <aside className="policy-preview" aria-labelledby="policy-preview-title">
         <div className="policy-preview-heading">
-          <ShieldCheck size={24} aria-hidden="true" />
+          <ApertureMark />
           <h2 id="policy-preview-title">Your trading rules</h2>
         </div>
         <p>One position. Different permissions as conditions change.</p>

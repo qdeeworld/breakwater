@@ -2,7 +2,7 @@
 
 The maker lifecycle is implemented by `BreakwaterPositions`, `BreakwaterMakerAMM`
 and `BreakwaterPolicy`. The owner console is publicly deployed at
-https://breakwater.dolepee.com on Sepolia with no-value sample tokens and
+https://breakwater.dolepee.com/treasury on Sepolia with no-value sample tokens and
 owner-controlled sample observations. Builder-assisted lifecycle checks are not
 evidence of independent use, profitable liquidity provision, or an audited
 production system.
