@@ -1,4 +1,5 @@
 import { BreakwaterConsole } from '../breakwater-console';
+import { WorkspaceNav } from '../workspace-nav';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -15,5 +16,13 @@ export const metadata: Metadata = {
 };
 
 export default function Trade() {
-  return <BreakwaterConsole />;
+  return (
+    <>
+      <a className="skip-link" href="#main-content">
+        Skip to trade
+      </a>
+      <WorkspaceNav />
+      <BreakwaterConsole />
+    </>
+  );
 }

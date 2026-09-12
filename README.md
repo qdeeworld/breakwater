@@ -15,7 +15,7 @@ available. Execution is not guaranteed; the discount is not a total-loss cap.
 
 ## Status
 
-The core owner lifecycle is live on [Sepolia](https://breakwater.dolepee.com):
+The core owner lifecycle is live in the [Sepolia treasury workspace](https://breakwater.dolepee.com/treasury):
 creation, policy/allocation, approvals/shipment, explicit healthy fees,
 stress/refusal/halt states, actual exit proceeds and cancellation. See
 [`docs/treasury-product.md`](docs/treasury-product.md) for accounting and safety limits.
@@ -114,6 +114,8 @@ npx -y yarn@1.22.22 test:fork
 The captured block, feed rounds, quote, and Aqua balance deltas are recorded in
 [`evidence/mainnet-fork-2026-09-04.md`](evidence/mainnet-fork-2026-09-04.md).
 
+The product homepage explains illustrative trading permissions, with the owner workspace at `/treasury`.
+Existing `/?position=...` shared links still open the position directly; new links use `/treasury?position=...`.
 The owner console lives in [`web`](web); its configured release manifest is separate
 from the earlier market manifest. Missing configuration disables owner creation.
 The previous taker console is retained at `/trade`. Both use automatic

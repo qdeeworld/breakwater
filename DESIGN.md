@@ -1,128 +1,227 @@
 ---
-version: alpha
-name: Breakwater Marine Instrument
-description: A treasury decision workspace joining allocation, policy rehearsal and live position management.
+name: Breakwater Selective Aperture
+description: Sculptural petrol-and-pewter identity for treasury liquidity with explicit trading permissions.
 colors:
-  fog: "#EAF2F5"
-  primary: "#072A40"
-  foam: "#F8FBFC"
-  steel: "#91A8AF"
-  tide: "#0D7C77"
-  flare: "#C6314A"
+  primary: "#0C282C"
+  fog: "#E5EFEE"
+  foam: "#F7FAF9"
+  steel: "#ADCAC2"
+  tide: "#276B5F"
+  flare: "#A02D46"
+  muted: "#486761"
+  field: "#EAF2EF"
+  field-border: "#C1D4CB"
 typography:
   display:
-    fontFamily: Barlow Condensed
-    fontSize: 48px
+    fontFamily: "Geist Variable"
+    fontSize: "132px"
     fontWeight: 650
-    lineHeight: 0.95
-    letterSpacing: -0.015em
+    lineHeight: 0.89
+    letterSpacing: "-0.04em"
+  display-mobile:
+    fontFamily: "Geist Variable"
+    fontSize: "76px"
+    fontWeight: 650
+    lineHeight: 0.96
+    letterSpacing: "-0.04em"
+  headline:
+    fontFamily: "Geist Variable"
+    fontSize: "80px"
+    fontWeight: 620
+    lineHeight: 1.05
+    letterSpacing: "-0.04em"
+  title:
+    fontFamily: "Geist Variable"
+    fontSize: "42px"
+    fontWeight: 550
+    lineHeight: 1.1
+    letterSpacing: "-0.035em"
+  panel-title:
+    fontFamily: "Geist Variable"
+    fontSize: "25px"
+    fontWeight: 550
+    lineHeight: 1.3
+    letterSpacing: "-0.025em"
   body:
-    fontFamily: Manrope Variable
-    fontSize: 16px
-    fontWeight: 450
+    fontFamily: "Geist Variable"
+    fontSize: "16px"
+    fontWeight: 400
     lineHeight: 1.5
   data:
-    fontFamily: IBM Plex Mono
-    fontSize: 14px
+    fontFamily: "IBM Plex Mono"
+    fontSize: "14px"
     fontWeight: 500
-    lineHeight: 1.4
+    lineHeight: 1.6
 rounded:
-  base: 4px
+  panel: "18px"
+  card: "16px"
+  panel-mobile: "14px"
+  field: "12px"
+  pill: "100px"
 spacing:
-  unit: 4px
-  gutter: 24px
-  section: 32px
+  compact: "8px"
+  control-gap: "16px"
+  gutter: "24px"
+  panel: "34px"
+  panel-mobile: "22px"
+components:
+  button-light:
+    backgroundColor: "{colors.fog}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.pill}"
+    padding: "15px 34px"
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.foam}"
+    rounded: "{rounded.pill}"
+    width: "100%"
+  button-primary-disabled:
+    backgroundColor: "{colors.steel}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.pill}"
+  button-secondary:
+    backgroundColor: "transparent"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.pill}"
+    padding: "10px 12px"
+  input-allocation:
+    backgroundColor: "{colors.field}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.field}"
+  navigation-active:
+    backgroundColor: "{colors.foam}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.pill}"
+    padding: "10px 20px"
+  condition-selected:
+    backgroundColor: "{colors.foam}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.pill}"
+    padding: "8px"
+  card-setup:
+    backgroundColor: "{colors.foam}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.panel}"
+    padding: "{spacing.panel}"
 ---
 
-# Breakwater interface system
+# Design System: Breakwater
 
 ## Overview
 
-Breakwater lets a treasury owner create productive Aqua liquidity with explicit risk limits. Ownership, actual fees and understandable policy changes lead the experience; trading against a position is the complementary participant journey.
+**Creative North Star: "Selective Aperture"**
 
-This is an operational instrument, not a protocol landing page. The owner chooses allocation and policy, rehearses their consequences, approves and ships, observes earnings and remaining exposure, and can cancel. Aqua/SwapVM enforce ordinary trades and bounded stressed exits. Atomic clearing is optional rather than the primary product promise.
+Breakwater joins deep petrol, brushed pewter and mineral light. A monumental aperture expresses selective trading permission, while broad, closely set typography states the owner's outcome. The original rendered artwork supplies the homepage's material character; a small two-part aperture mark carries that identity into navigation and the working product.
 
-### Visual thesis
+The treasury workspace uses the same palette and type on quieter, rounded surfaces. Clear amounts, labelled trading directions and deliberate actions take priority over decorative telemetry. The finished implementation preserves the user-selected middle aperture direction, seed `dad3d530`; the page-specific composition contract remains in `.impeccable/aperture-build-brief.md`.
 
-Use the visual language of a daylight marine control panel: pale fogged surfaces, deep harbor ink, thin structural rules, condensed instrument labels, and precise monospaced readings. The owner workspace expresses the **tide gate** as paired permitted/blocked treasury directions; the earlier public trade surface retains the reservoir diagram. Both express actual guard state rather than decoration.
+**Key Characteristics:**
 
-Avoid the familiar dark crypto-terminal treatment, glass cards, neon gradients, oversized marketing headlines, floating token art, and soft pill-shaped containers. Depth comes from hierarchy, borders, and tonal surface changes, not blur or heavy shadow.
+- Deep petrol fields, pale mineral surfaces and restrained green or rose state accents.
+- Large, tightly led display type paired with compact, readable operational type.
+- Sculptural imagery, exact direction diagrams and softly rounded controls.
+- Explicit permission words and contextual disclosure of supporting details.
 
 ## Colors
 
-- `fog` is the page canvas and low-emphasis control background.
-- `foam` is the primary working surface.
-- `primary` is deep harbor ink and carries text, primary controls, and strong structural emphasis.
-- `steel` is reserved for borders, dividers, secondary labels, and unavailable paths.
-- `tide` indicates healthy state, validated inputs, and an open route.
-- `flare` indicates stressed state, a closed route, validation failure, or a destructive consequence.
+Petrol and mineral neutrals establish the identity; state colors explain permission and require accompanying words or symbols.
 
-Never communicate route availability by color alone. Pair state color with a plain-language label, directional arrow, and open/closed gate shape. Keep normal text contrast at WCAG AA or better.
+### Primary
+
+- **Petrol** (`primary`) anchors the homepage and navigation and fills primary actions on light surfaces.
+- **Tide** (`tide`) marks active setup steps, permitted direction graphics on light surfaces and form focus.
+- **Flare** (`flare`) supplies the core warning/error accent. Dark preview surfaces use lighter mint and rose foregrounds for readable state labels.
+
+### Neutral
+
+- **Mineral Fog** (`fog`) is the page field and light homepage action surface.
+- **Foam** (`foam`) separates working panels and selected controls from the surrounding field.
+- **Mineral Steel** (`steel`) emphasizes the brand mark and selected display wording and supports restrained borders.
+- **Muted Green** (`muted`) carries explanatory copy on light surfaces.
+- **Field Mist** (`field`) and **Field Edge** (`field-border`) define editable amounts with tonal fill and a fine boundary.
+
+**The Labelled Permission Rule.** Healthy, stressed, halted and unavailable states must be named. Color alone never establishes permission, and unavailable observations never inherit a healthy appearance.
 
 ## Typography
 
-Use the display face for position states, asset symbols and principal amounts; body type for instructions, controls and errors; data type for prices, addresses and transaction details. Keep changing figures tabular. Use sentence case for prose and compact uppercase only for short instrument labels. Scale display type down on narrow screens before amounts wrap.
+**Display and body font:** Geist Variable with a sans-serif fallback. **Data font:** IBM Plex Mono with a monospace fallback. Both are self-hosted by the application.
+
+The type ramp moves from a broad, tightly packed homepage promise to compact workspace headings and open explanatory copy. Display uses the desktop role above, then the mobile role at the homepage breakpoint; desktop leading is intentionally tighter than mobile leading. Marketing section headings use `headline`, workspace page headings use `title`, and setup/preview headings use `panel-title`.
+
+The four responsive font-size tokens record the actual maximum pixel dimensions for portable token export. Preserve the built fluid sizing when applying them: `display` uses `clamp(64px, 7.22vw, 132px)`, `display-mobile` uses `clamp(48px, 10.3vw, 76px)`, `headline` uses `clamp(40px, 4.69vw, 80px)`, and `title` uses `clamp(28px, 3vw, 42px)`. Between 761px and 1100px the hero uses `7.2vw`; at 760px and below marketing section headings use `clamp(36px, 8.5vw, 58px)`. Token font families contain the family name alone; the CSS fallback stacks remain those stated above.
+
+Ordinary labels, action text, field entry and footer copy remain Geist. Supporting copy generally sits between 14px and 18px with comfortable leading; workspace summaries use 16px with 1.6 leading. Main allocation entry is 32px on desktop and 28px on small screens, with tabular figures despite using the body face. Data tables, inventory measurements and addresses use mono where alignment or precision helps. Long values wrap rather than losing digits.
+
+**The Purposeful Mono Rule.** Reserve monospaced type for amounts, measurements and identifiers that benefit from it; ordinary explanation and navigation use the body face.
 
 ## Layout
 
-Use compact horizontal navigation, retaining visible labels on mobile. Separate the treasury, available liquidity and technical documentation without adding evaluator-specific navigation. Network and wallet status remain visible beside the current task.
+The homepage uses broad paired regions and horizontal section changes. Its desktop promise sits left of the aperture artwork, with direct app and discovery actions below. Shared outer alignment uses 4.4% gutters. At 760px and below, the promise and actions precede the recognizable artwork, navigation wraps visibly, and permission choices become stacked rows. Mobile homepage gutters are 22px. The artwork remains free of body-copy overlays.
 
-Creation is guided through allocation, limits and review. Show one decision stage at a time, retaining editable values when moving backward. Keep the next action beside the current inputs and place the first allocation in the first mobile viewport. Returning owners reach their positions without completing setup again.
+The workspace has a horizontal petrol navigation bar and a separate wallet/network row. Content is centered within a 1360px maximum width. Creation pairs an editable setup panel with a quieter permission preview in a 1.2:1 grid with the `gutter` gap; the grid becomes one column by 860px. Panel padding contracts from `panel` to 28px and then `panel-mobile`; at 600px and below the main workspace gutter is 18px. Discovery rows use a three-region desktop layout and stack by 700px.
 
-Place a compact permission preview beside setup on desktop and after the current task on mobile. Label its selectable conditions as illustrative, never live observations. At review, keep the allocation and limits visible beside activation. Historical rehearsal is optional within that review, with its verdict first and full numeric comparison in a disclosure; it must not force a long scroll to create.
-
-A selected position places inventory, actual earnings and policy state beside the next owner action or trade ticket. Keep live position accounting visually distinct from historical rehearsal. On mobile, put the next action immediately after the state summary, ahead of secondary telemetry.
-
-Use the shared spacing unit and grouped gaps. Keep related readings tighter than independent component groups and major sections.
+Creation presents allocation, limits and review one stage at a time. Backward navigation retains edits, the next action stays beside the task, and the preview follows the form on narrow screens. Historical rehearsal is optional in review, after the activation action. Selected positions place inventory and actual policy state near the owner action or trade ticket, with secondary details in disclosures. Shared-position URLs continue to open the position directly.
 
 ## Elevation & Depth
 
-Establish hierarchy with thin structural rules and tonal working surfaces rather than blur or heavy shadow.
+Depth comes primarily from the rendered aperture and tonal surface changes. Working panels are flat, with restrained borders and no general card-shadow system. The homepage action's small hover lift is an interaction cue; it does not establish floating panels. Native status indicators may carry their existing small ring, without becoming a general glow treatment.
+
+**The Material Depth Rule.** Let the original aperture image provide sculptural light and texture; use tonal grouping and fine boundaries for working surfaces.
+
+Homepage action background and vertical position transition over 200ms; permission arrows transition opacity over 250ms. Reduced-motion mode removes homepage transitions and the hover lift, while the application's global reduced-motion rules suppress other nonessential motion.
 
 ## Shapes
 
-Keep the shared restrained corner shape for working surfaces, buttons and inputs. Do not introduce soft pill-shaped containers.
+The two asymmetric aperture plates form the reusable brand mark. Keep the metal sculpture as the original raster artwork and use inline SVG for marks, direction arrows and locks.
+
+Working surfaces use the `panel` radius for setup, preview, trade ticket, rehearsal and sample-token tools. Position and discovery cards use `card`; setup and preview move to `panel-mobile` on small screens. Amount fields use `field`; select and notice corners are slightly tighter at 10px. Actions, selected routes, condition switches and state labels use `pill`. Numbered setup steps remain circles. Permission rows use straight dividers rather than individual decorative cards.
 
 ## Components
 
-The creation workbench numbers its actual stages allocation, limits and review. Use short operational headings, not slogans or repeated eyebrow labels. Keep navigation and the wallet row compact while retaining visible names and accessible targets.
-Historical comparisons never share an unlabeled metric with actual position accounting.
+### Buttons
 
-### Tide gate
+Homepage actions are pale pills with petrol text, 62px minimum height and the `button-light` padding. Hover brightens the surface and lifts it by 2px; keyboard focus is a 3px current-color outline with 5px offset. Mobile homepage actions reduce to 54px minimum height with 12px by 26px padding; the header action remains a compact 44px target.
 
-Show two labeled asset reservoirs connected by a central guard gate. Healthy permits two-way trading; stressed closes impaired-asset inflow and permits exposure-reducing trades; an unsafe reserve or invalid observations halt both. An allowed direction is not a guaranteed available exit: insufficient inventory, allowance or liquidity must remain visible. Animate only actual state changes and disable motion under reduced-motion preferences.
+Workspace primary actions are full-width petrol pills with foam text and at least 52px height. Hover changes the fill and border to the existing deeper green; disabled actions use steel and retain readable petrol text. Secondary actions are transparent pills with a fog hover surface. Guided-workspace focus uses a 3px tide outline with 3px offset; dark preview controls use foam instead. Signing remains deliberate, and creation, token approval and Aqua activation remain distinct actions.
 
-### Position state panel
+### Inputs / Fields
 
-Lead with the actual state, including draft, healthy, stressed, halted and cancelled. Show independent asset prices, configured trigger, each feed's observation age and limits. Technical identifiers belong in a disclosure below these readings. Unresolved data is unavailable, not a healthy default.
+Allocation inputs combine a prominent editable amount with a persistent token suffix in one mist-filled field. They are at least 76px tall on desktop and 68px on small screens. The boundary turns tide on focus-within, with a visible outline on the focused input. Trade and rehearsal inputs reuse the field fill and rounded boundary at a more compact 54px minimum height. Native labels, help text and errors stay adjacent to their field.
 
-### Owner controls and earnings
+### Navigation
 
-Separate creation from token approval and Aqua shipment; explain what each signature authorizes. Cancelling removes the Aqua allocation without implying a custodial withdrawal. Show settled healthy fees separately from exit proceeds, remaining token exposure and price gains or losses. Keep policy choices immutable for an existing order and explain that changes require cancellation and a new position.
+The horizontal workspace bar pairs the aperture mark and name with Treasury, Find liquidity and Documentation. Active routes are foam pills on petrol; inactive hover uses a lighter petrol fill. Keyboard focus uses a foam outline. On small screens the brand and navigation occupy separate rows, with labels preserved as space tightens. The wallet/network row remains visible underneath.
 
-### Policy rehearsal
+### Chips / State Labels
 
-Use the same parsed allocation and policy settings for rehearsal and position creation. Changing inputs invalidates prior results. Present healthy, stress and recovery checkpoints as independent counterfactuals, not a continuous historical portfolio. Differentiate exact contract arithmetic, archived pool quotes and estimated transaction costs. Show adverse outcomes and unavailable quotes as prominently as favorable ones. Rehearsal neither moves tokens nor changes live observations.
+Discovery states are compact text pills. Healthy uses a pale green fill; stressed and halted use pale rose. Labels distinguish the states even when they share a color family. These are status text, not controls: do not invent hover, focus or click behavior for them. Network context remains a simple text label in the wallet row.
 
-Lead rehearsal with a result-specific explanation of the policy decision and why trades did or did not happen. State beside the selector that checkpoints are independent snapshots, not a continuous backtest. Keep original exposure and adverse outcomes visible before expandable arithmetic. Use an aligned comparison table on desktop and readable per-option details on mobile. Fees remain included in inventory. Exact precision stays available in the detailed comparison.
+### Cards / Containers
 
-### Trade ticket
+Setup, preview, trade and discovery panels use large contiguous surfaces with clear internal grouping. Setup and trade surfaces are foam; the permission preview is deep petrol with lighter text. Panels retain their flat material treatment. Real controls inside panels carry interaction states; the panel itself does not lift or become focusable.
 
-Use one amount input, an explicit `You pay` / `You receive` summary, and an active-voice primary button naming the next real step. Quotes update automatically after input settles; manual refresh is a recovery action. Show minimum received and fees before signing, with deadline and oracle commitment in technical detail.
+### Selective Permission Preview
 
-### Transaction receipt
+The preview uses a pill switch for Healthy, Stressed and Halted, explicit illustrative context, and paired labelled direction rows. The selected condition is foam on petrol; inactive hover lightens the switch segment. Arrows signal a permitted direction, locks signal a blocked direction, and state text remains visible. Explanations and fixed safety boundaries sit immediately below the diagram.
 
-After settlement, retain the completed amounts, state used for execution, and linked transaction hash. Failure messages state whether the wallet, allowance, quote freshness, oracle state, deadline, or onchain call caused the stop, and provide the corresponding recovery action.
+The homepage artwork depicts healthy illustrative permission, not live observations. Healthy allows both directions; asset stress blocks further asset inflow while allowing eligible bounded sales; unsafe reserve or unacceptable observations halt trading. Permission does not guarantee execution.
+
+The selected-position view preserves pay/receive labels, refreshed quotes, minimum received, healthy fee, the actual next action and settled transaction receipts. Existing policy is immutable: changing the settings requires a new position; cancellation of the old position is a separate owner decision. Cancellation removes its allocation and does not imply a custodial withdrawal. Historical fees and exit proceeds remain distinct from remaining inventory, and shared wallet backing is not reserved liquidity.
 
 ## Do's and Don'ts
 
-- The UI derives the permitted direction from onchain state; it does not present a disabled direction as a viable quote.
-- A changed oracle commitment invalidates the displayed quote and requires a visible requote.
-- Wallet and network mismatches are explained before the user reaches a signing prompt.
-- Keyboard focus is conspicuous and follows visual order. Native labeled controls and generous touch targets are required.
-- Loading states preserve layout and name the operation in progress. Empty, disconnected, stale-data, rejected-signature, and reverted-transaction states each have a purposeful recovery path.
-- The interface never labels a mock or simulated value as live.
+### Do:
 
-### Voice
+- Do keep owner and counterparty actions primary, with technical receipts and historical rehearsal in context.
+- Do distinguish live position state, illustrative permissions and independent historical checkpoints.
+- Do preserve precise amounts, shared-position links and the existing wallet authority throughout visual changes.
+- Do retain native labels, visible keyboard focus, reduced-motion support and at least 44px interactive targets where applicable.
+- Do show loading, empty, error, wallet/network and unavailable states with an appropriate recovery action.
 
-Use direct, calm language suitable for a consequential transaction. Prefer `Stressed — only treasury unwind is open` over protocol jargon. Avoid judge-facing labels, hype, fabricated impact claims, and unexplained abbreviations.
+### Don't:
+
+- Don't turn illustrative art or historical comparisons into live financial evidence.
+- Don't imply guaranteed execution, exits, returns or a maximum total-loss cap.
+- Don't invent customers, backers, audits, TVL or APY.
+- Don't spread monospaced type into ordinary explanations, navigation or footer copy.
+- Don't replace the selected aperture artwork with generic dashboard imagery or decorative card stacks.

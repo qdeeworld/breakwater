@@ -2,10 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import '@fontsource/barlow-condensed/600.css';
 import '@fontsource/barlow-condensed/700.css';
 import '@fontsource-variable/manrope';
+import '@fontsource-variable/geist';
 import '@fontsource/ibm-plex-mono/500.css';
 import './globals.css';
 import './workspace.css';
-import { WorkspaceNav } from './workspace-nav';
+import './aperture.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://breakwater.dolepee.com'),
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Breakwater',
     description:
-      'Treasury-owned liquidity with trading fees and explicit risk limits, enforced through Aqua and SwapVM.',
+      'Treasury-owned liquidity with trading fees and explicit risk limits. Try Aqua and SwapVM on Sepolia with no-value test tokens.',
     url: '/',
     siteName: 'Breakwater',
     type: 'website',
@@ -38,12 +39,12 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Breakwater',
     description:
-      'Treasury-owned liquidity with trading fees and explicit risk limits, enforced through Aqua and SwapVM.',
+      'Treasury-owned liquidity with trading fees and explicit risk limits. Try Aqua and SwapVM on Sepolia with no-value test tokens.',
     images: ['https://breakwater.dolepee.com/og.png'],
   },
 };
 
-export const viewport: Viewport = { themeColor: '#EAF2F5' };
+export const viewport: Viewport = { themeColor: '#0C282C' };
 
 export default function RootLayout({
   children,
@@ -51,10 +52,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <a className="skip-link" href="#workspace-content">
-          Skip to workspace
-        </a>
-        <WorkspaceNav />
+        <div
+          hidden
+          dangerouslySetInnerHTML={{
+            __html:
+              '<!-- THESIS: Treasury liquidity with selective permissions, not a generic dashboard hero. OWN-WORLD: Petrol, mineral light, brushed pewter aperture, broad grotesk type, rounded actions. STORY: Understand the policy, open the real treasury, inspect actual outcomes. FIRST VIEWPORT: Left promise and app action; monumental aperture right; light permissions below. FORM: Selective aperture, grounded index 1, user-selected pick, seed dad3d530. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->',
+          }}
+        />
         <div className="workspace-content" id="workspace-content" tabIndex={-1}>
           {children}
         </div>

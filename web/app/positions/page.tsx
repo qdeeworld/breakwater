@@ -1,9 +1,10 @@
 'use client';
+import { WorkspaceNav } from '../workspace-nav';
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { formatUnits } from 'viem';
-import { Waves } from 'lucide-react';
+import { ArrowRight, Waves } from 'lucide-react';
 import { discoverPositions } from '@/lib/discovery';
 import { positionStatus } from '@/lib/position-status';
 import { shortenHex } from '@/lib/breakwater';
@@ -69,6 +70,7 @@ export default function Positions() {
       <a className="skip-link" href="#positions">
         Skip to positions
       </a>
+      <WorkspaceNav />
       <header className="topbar">
         <Link className="wordmark" href="/">
           <span className="wordmark-mark">
@@ -77,11 +79,11 @@ export default function Positions() {
           Breakwater
         </Link>
         <span className="network-chip">Sepolia · no-value test tokens</span>
-        <Link className="text-action" href="/">
+        <Link className="text-action" href="/treasury">
           Create a position
         </Link>
       </header>
-      <main className="main-content" id="positions">
+      <main className="main-content" id="positions" tabIndex={-1}>
         <section className="state-intro discovery-intro">
           <div>
             <h1>Find liquidity</h1>
@@ -108,7 +110,9 @@ export default function Positions() {
             {loading
               ? 'Loading position states and backing…'
               : result
-                ? `${result.entries.length} ${result.entries.length === 1 ? 'position' : 'positions'} found.`
+                ? `${result.entries.length} ${
+                    result.entries.length === 1 ? 'position' : 'positions'
+                  } found.`
                 : ''}
           </output>
           {error && (
@@ -123,7 +127,7 @@ export default function Positions() {
                 Create and ship a position to make liquidity available, or use
                 an existing position’s share link.
               </p>
-              <Link className="text-action" href="/">
+              <Link className="text-action" href="/treasury">
                 Create a position
               </Link>
             </div>
@@ -135,7 +139,7 @@ export default function Positions() {
                 See each position’s reason below, or create your own sample
                 allocation. Creating it does not supply a willing counterparty.
               </p>
-              <Link className="text-action" href="/">
+              <Link className="text-action" href="/treasury">
                 Create a position
               </Link>
             </div>
@@ -192,11 +196,13 @@ export default function Positions() {
                               ? 'primary-action'
                               : 'secondary-action'
                           }
-                          href={`/?position=${hash}`}
-                          aria-label={`${state?.tradable ? 'Quote a trade' : 'View position'} ${shortenHex(hash)}`}
+                          href={`/treasury?position=${hash}`}
+                          aria-label={`${
+                            state?.tradable ? 'Quote a trade' : 'View position'
+                          } ${shortenHex(hash)}`}
                         >
                           {state?.tradable ? 'Quote a trade' : 'View position'}{' '}
-                          →
+                          <ArrowRight size={18} aria-hidden="true" />
                         </Link>
                         <details className="market-read-details">
                           <summary>Backing details</summary>
