@@ -898,7 +898,7 @@ export function TreasuryConsole({
       context={
         feedbackLocation === 'global' &&
         feedbackContext.order &&
-        (busy || pendingHash || receiptHash)
+        (busy || pendingHash || receiptHash || error || status)
           ? `For position ${shortenHex(feedbackContext.order)}${feedbackContext.account ? ` · wallet ${shortenHex(feedbackContext.account)}` : ''}`
           : undefined
       }
