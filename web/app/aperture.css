@@ -1225,3 +1225,187 @@ a {
     transform: none;
   }
 }
+
+/* Finishing pass: a clear decision, nearby feedback, compact supporting detail. */
+.workspace-content .quote-terms {
+  gap: 12px;
+  margin: 22px 0;
+}
+.workspace-content .quote-terms dt,
+.workspace-content .quote-terms dd {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.workspace-content .quote-terms dd {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.workspace-content .quote-terms .quote-receive {
+  display: block;
+  padding: 4px 0 20px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #c7d9d3;
+}
+.workspace-content .quote-receive dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+  text-align: left;
+  font: 500 clamp(28px, 3vw, 40px)/1.15 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.workspace-content .quote-receive .quote-token {
+  font-size: 16px;
+  color: #486761;
+}
+.quote-message {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
+}
+.workspace-content .maker-heading > .position-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+  margin: 0;
+}
+.workspace-content .position-owner {
+  margin: 10px 0 14px;
+  font-size: 14px;
+}
+.position-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.workspace-content .position-share .text-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 100px;
+  min-height: 44px;
+  padding: 10px 16px;
+}
+.position-share summary {
+  min-height: 44px;
+  padding: 12px 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.position-share details[open] {
+  flex-basis: 100%;
+  min-width: 0;
+}
+.workspace-content .position-share .maker-share {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
+}
+.position-share input {
+  width: 100%;
+  min-width: 0;
+}
+.position-share .copy-error {
+  flex-basis: 100%;
+  font-size: 14px;
+  color: var(--flare);
+}
+.action-feedback {
+  margin: 16px 0;
+  padding: 16px 0;
+  border-top: 1px solid #c7d9d3;
+  border-bottom: 1px solid #c7d9d3;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.action-feedback strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+.action-feedback p {
+  margin: 6px 0 0;
+  color: #486761;
+}
+.action-feedback-error strong,
+.action-feedback-error p {
+  color: var(--flare);
+}
+.action-feedback a,
+.settled-trade a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  text-underline-offset: 4px;
+}
+.settled-trade {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #c7d9d3;
+}
+.settled-trade h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 18px/1.4 var(--font-body);
+  color: var(--tide);
+}
+.settled-trade dl {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 0;
+}
+.settled-trade dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.settled-trade dt,
+.settled-trade dd {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.settled-trade dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .workspace-content .position-decision .maker-heading {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .workspace-content .position-decision .maker-heading > div {
+    min-width: 0;
+  }
+  .workspace-content .treasury-grid .maker-heading h2 {
+    font-size: 24px;
+  }
+  .workspace-content .position-decision {
+    padding: 22px;
+  }
+  .workspace-content .position-decision .decision-label {
+    margin-top: 8px;
+  }
+  .workspace-content .position-owner {
+    margin: 8px 0 12px;
+  }
+  .workspace-content .position-intro {
+    margin-bottom: 20px;
+  }
+  .workspace-content .maker-nav {
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+  }
+}

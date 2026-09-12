@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     url: '/positions',
     images: [
       {
-        url: 'https://breakwater.dolepee.com/og.png',
+        url: 'https://breakwater.dolepee.com/og.png?v=aperture-20260912',
         width: 1200,
         height: 630,
       },
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     title: 'Find liquidity — Breakwater',
     description:
       'Browse treasury positions and quote permitted trades. Sepolia no-value sample tokens.',
-    images: ['https://breakwater.dolepee.com/og.png'],
+    images: ['https://breakwater.dolepee.com/og.png?v=aperture-20260912'],
   },
 };
 

@@ -1,6 +1,12 @@
 'use client';
 
-import { useRef, useState, type RefObject, type SubmitEvent } from 'react';
+import {
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+  type SubmitEvent,
+} from 'react';
 import {
   ArrowRight,
   ArrowLeft,
@@ -34,6 +40,7 @@ type Props = {
   locked: boolean;
   configured: boolean;
   createLabel: string;
+  feedback?: ReactNode;
   onCreate: (event: SubmitEvent<HTMLFormElement>) => void;
 };
 
@@ -300,6 +307,7 @@ export function CreationGuide({ allocationRef, ...p }: Props) {
               <ArrowRight size={18} aria-hidden="true" />
             </button>
           </div>
+          {p.feedback}
         </form>
       </section>
       <aside className="policy-preview" aria-labelledby="policy-preview-title">
