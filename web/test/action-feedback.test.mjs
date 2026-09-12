@@ -4,6 +4,8 @@ import {
   actionHeading,
   feedbackPlacement,
   feedbackContextLabel,
+  restoreFeedback,
+  pendingFeedbackRecord,
 } from '../lib/action-feedback.ts';
 
 test('wallet review is distinct from broadcast and confirmation', () => {
@@ -78,4 +80,28 @@ test('wallet-only and pre-broadcast feedback retain context without a receipt', 
   assert.equal(feedbackContextLabel({ account: originalWallet, order: originalOrder }),
     'For position 0x111111…1111 · wallet 0xaaaaaa…aaaa');
   assert.equal(feedbackContextLabel({}), undefined);
+});
+
+test('pending and replacement receipts preserve the initiating feedback across reload', () => {
+  for (const area of ['create', 'position', 'faucet']) {
+    const tracking = { area, context: {
+      account: originalWallet, ...(area === 'position' ? { order: originalOrder } : {}),
+    } };
+    const saved = JSON.parse(JSON.stringify(pendingFeedbackRecord(originalOrder, 11155111, tracking)));
+    const restored = restoreFeedback(saved);
+    assert.deepEqual(restored, tracking);
+    const replacement = pendingFeedbackRecord(otherOrder, 11155111, restored);
+    assert.equal(replacement.hash, otherOrder);
+    assert.deepEqual(restoreFeedback(replacement), tracking);
+    assert.equal(feedbackPlacement({ ...restored, showCreate: true, account: otherWallet }), 'global');
+  }
+});
+
+test('legacy and malformed pending feedback never invents wallet attribution', () => {
+  for (const saved of [null, {}, { hash: originalOrder, chainId: 11155111 },
+    { area: 'position', context: { account: 'not-an-address', order: originalOrder } }]) {
+    assert.deepEqual(restoreFeedback(saved), { area: 'global', context: {} });
+  }
+  assert.deepEqual(restoreFeedback({ area: 'position', context: { account: originalWallet, order: 'bad' } }),
+    { area: 'position', context: { account: originalWallet } });
 });

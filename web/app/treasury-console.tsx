@@ -6,8 +6,12 @@ import {
   actionHeading,
   feedbackPlacement,
   feedbackContextLabel,
+  restoreFeedback,
+  pendingFeedbackRecord,
   type TransactionStage,
   type FeedbackArea,
+  type FeedbackContext,
+  type SavedFeedback,
 } from '@/lib/action-feedback';
 
 import {
@@ -195,10 +199,13 @@ export function TreasuryConsole({
   const [transactionStage, setTransactionStage] =
     useState<TransactionStage>('idle');
   const [feedbackArea, setFeedbackArea] = useState<FeedbackArea>('global');
-  const [feedbackContext, setFeedbackContext] = useState<{
-    order?: Hex;
-    account?: Address;
-  }>({});
+  const [feedbackContext, setFeedbackContext] = useState<FeedbackContext>({});
+  const activeFeedback = useRef<SavedFeedback>({ area: 'global', context: {} });
+  const rememberFeedback = useCallback((area: FeedbackArea, context: FeedbackContext) => {
+    activeFeedback.current = { area, context };
+    setFeedbackArea(area);
+    setFeedbackContext(context);
+  }, []);
   let creationSettings: Settings | undefined;
   try {
     creationSettings = settingsFromForm(asset, reserve, fee, trigger, discount);
@@ -385,6 +392,8 @@ export function TreasuryConsole({
           isHex(pending.hash) &&
           pending.hash.length === 66
         ) {
+          const tracking = restoreFeedback(pending);
+          rememberFeedback(tracking.area, tracking.context);
           lock.current = true;
           setBusy('Confirming previous transaction');
           setTransactionStage('confirming');
@@ -397,7 +406,7 @@ export function TreasuryConsole({
             }
             localStorage.setItem(
               pendingKey,
-              JSON.stringify({ hash, chainId: sepolia.id }),
+              JSON.stringify(pendingFeedbackRecord(hash, sepolia.id, tracking)),
             );
           })
             .then((r) => {
@@ -443,7 +452,7 @@ export function TreasuryConsole({
       active = false;
       clearTimeout(initial);
     };
-  }, [choose]);
+  }, [choose, rememberFeedback]);
 
   const run = async (
     label: string,
@@ -456,8 +465,7 @@ export function TreasuryConsole({
     setError('');
     setStatus('');
     if (!pendingHash) {
-      setFeedbackArea(area);
-      setFeedbackContext({ order: area === 'position' ? selected : undefined, account });
+      rememberFeedback(area, { order: area === 'position' ? selected : undefined, account });
       setReceiptHash(undefined);
       setTransactionStage('idle');
     }
@@ -501,6 +509,11 @@ export function TreasuryConsole({
         'A previous transaction is still unresolved. Check its receipt before submitting another action.',
       );
     const w = await wallet();
+    const tracking: SavedFeedback = {
+      area: activeFeedback.current.area,
+      context: { ...activeFeedback.current.context, account: w.account.address },
+    };
+    rememberFeedback(tracking.area, tracking.context);
     setTransactionStage('idle');
     setReceiptHash(undefined);
     const { request } = await makerClient.simulateContract({
@@ -517,14 +530,14 @@ export function TreasuryConsole({
     setStatus('Submitted. Waiting for a Sepolia confirmation…');
     localStorage.setItem(
       pendingKey,
-      JSON.stringify({ hash, chainId: sepolia.id }),
+      JSON.stringify(pendingFeedbackRecord(hash, sepolia.id, tracking)),
     );
     const receipt = await confirmed(hash, (replacement) => {
       setReceiptHash(replacement);
       setPendingHash(replacement);
       localStorage.setItem(
         pendingKey,
-        JSON.stringify({ hash: replacement, chainId: sepolia.id }),
+        JSON.stringify(pendingFeedbackRecord(replacement, sepolia.id, tracking)),
       );
     });
     localStorage.removeItem(pendingKey);
@@ -570,7 +583,7 @@ export function TreasuryConsole({
     setFeedbackArea('global');
     setError('');
     if (!pendingHash) {
-      setFeedbackContext({});
+      rememberFeedback('global', {});
       setTransactionStage('idle');
       setReceiptHash(undefined);
     }
@@ -984,15 +997,13 @@ export function TreasuryConsole({
               className="text-action"
               onClick={() =>
                 void run('Checking pending transaction', async () => {
+                  const tracking = activeFeedback.current;
                   const r = await confirmed(pendingHash, (replacement) => {
                     setPendingHash(replacement);
                     setReceiptHash(replacement);
                     localStorage.setItem(
                       pendingKey,
-                      JSON.stringify({
-                        hash: replacement,
-                        chainId: sepolia.id,
-                      }),
+                      JSON.stringify(pendingFeedbackRecord(replacement, sepolia.id, tracking)),
                     );
                   });
                   localStorage.removeItem(pendingKey);
