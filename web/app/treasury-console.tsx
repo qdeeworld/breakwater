@@ -1,5 +1,18 @@
 'use client';
 import { WorkspaceNav } from './workspace-nav';
+import { ActionFeedback } from './action-feedback';
+import { PositionShare } from './position-share';
+import {
+  actionHeading,
+  feedbackPlacement,
+  feedbackContextLabel,
+  restoreFeedback,
+  pendingFeedbackRecord,
+  type TransactionStage,
+  type FeedbackArea,
+  type FeedbackContext,
+  type SavedFeedback,
+} from '@/lib/action-feedback';
 
 import {
   useCallback,
@@ -10,7 +23,7 @@ import {
   type SubmitEvent,
 } from 'react';
 import Link from 'next/link';
-import { ArrowDown, ArrowUpRight, Waves } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Check, RefreshCw, Waves } from 'lucide-react';
 import { observationAge } from '@/lib/observation-age';
 import {
   createWalletClient,
@@ -183,6 +196,16 @@ export function TreasuryConsole({
       !initialPosition && !initialPositionError,
     );
   const [pendingHash, setPendingHash] = useState<Hex>();
+  const [transactionStage, setTransactionStage] =
+    useState<TransactionStage>('idle');
+  const [feedbackArea, setFeedbackArea] = useState<FeedbackArea>('global');
+  const [feedbackContext, setFeedbackContext] = useState<FeedbackContext>({});
+  const activeFeedback = useRef<SavedFeedback>({ area: 'global', context: {} });
+  const rememberFeedback = useCallback((area: FeedbackArea, context: FeedbackContext) => {
+    activeFeedback.current = { area, context };
+    setFeedbackArea(area);
+    setFeedbackContext(context);
+  }, []);
   let creationSettings: Settings | undefined;
   try {
     creationSettings = settingsFromForm(asset, reserve, fee, trigger, discount);
@@ -205,6 +228,9 @@ export function TreasuryConsole({
   const [refreshQuote, setRefreshQuote] = useState(0),
     [now, setNow] = useState(0);
   const [lastTrade, setLastTrade] = useState<{
+    hash: Hex;
+    order: Hex;
+    account: Address;
     input: bigint;
     output: bigint;
     assetIn: boolean;
@@ -366,8 +392,11 @@ export function TreasuryConsole({
           isHex(pending.hash) &&
           pending.hash.length === 66
         ) {
+          const tracking = restoreFeedback(pending);
+          rememberFeedback(tracking.area, tracking.context);
           lock.current = true;
           setBusy('Confirming previous transaction');
+          setTransactionStage('confirming');
           setReceiptHash(pending.hash);
           setPendingHash(pending.hash);
           void confirmed(pending.hash, (hash) => {
@@ -377,7 +406,7 @@ export function TreasuryConsole({
             }
             localStorage.setItem(
               pendingKey,
-              JSON.stringify({ hash, chainId: sepolia.id }),
+              JSON.stringify(pendingFeedbackRecord(hash, sepolia.id, tracking)),
             );
           })
             .then((r) => {
@@ -396,6 +425,7 @@ export function TreasuryConsole({
               );
               localStorage.removeItem(pendingKey);
               setPendingHash(undefined);
+              setTransactionStage('confirmed');
               setSettledRevision((v) => v + 1);
               refreshAfterRecovery();
             })
@@ -422,14 +452,24 @@ export function TreasuryConsole({
       active = false;
       clearTimeout(initial);
     };
-  }, [choose]);
+  }, [choose, rememberFeedback]);
 
-  const run = async (label: string, action: () => Promise<void>) => {
+  const run = async (
+    label: string,
+    action: () => Promise<void>,
+    area: typeof feedbackArea = 'position',
+  ) => {
     if (lock.current) return;
     lock.current = true;
     setBusy(label);
     setError('');
     setStatus('');
+    if (!pendingHash) {
+      rememberFeedback(area, { order: area === 'position' ? selected : undefined, account });
+      setReceiptHash(undefined);
+      setTransactionStage('idle');
+    }
+    setLastTrade(undefined);
     try {
       await action();
       await refresh();
@@ -469,59 +509,84 @@ export function TreasuryConsole({
         'A previous transaction is still unresolved. Check its receipt before submitting another action.',
       );
     const w = await wallet();
+    const tracking: SavedFeedback = {
+      area: activeFeedback.current.area,
+      context: { ...activeFeedback.current.context, account: w.account.address },
+    };
+    rememberFeedback(tracking.area, tracking.context);
+    setTransactionStage('idle');
+    setReceiptHash(undefined);
     const { request } = await makerClient.simulateContract({
       ...call,
       account: w.account,
     });
     setStatus('Review this action in your wallet.');
     await wallet(); // Recheck account/network after the asynchronous simulation.
+    setTransactionStage('wallet');
     const hash = await w.writeContract(request);
+    setTransactionStage('confirming');
     setReceiptHash(hash);
     setPendingHash(hash);
     setStatus('Submitted. Waiting for a Sepolia confirmation…');
     localStorage.setItem(
       pendingKey,
-      JSON.stringify({ hash, chainId: sepolia.id }),
+      JSON.stringify(pendingFeedbackRecord(hash, sepolia.id, tracking)),
     );
     const receipt = await confirmed(hash, (replacement) => {
       setReceiptHash(replacement);
       setPendingHash(replacement);
       localStorage.setItem(
         pendingKey,
-        JSON.stringify({ hash: replacement, chainId: sepolia.id }),
+        JSON.stringify(pendingFeedbackRecord(replacement, sepolia.id, tracking)),
       );
     });
     localStorage.removeItem(pendingKey);
     setPendingHash(undefined);
+    setTransactionStage('confirmed');
     setSettledRevision((v) => v + 1);
     setStatus('Transaction confirmed.');
     return receipt;
   };
-  const connect = () =>
-    run('Connecting wallet', async () => {
-      const p = provider();
-      if (!p)
-        throw new Error(
-          'Open this page in a wallet browser or install an Ethereum wallet.',
-        );
-      const addresses = await p.request({ method: 'eth_requestAccounts' });
-      if (!addresses[0]) throw new Error('No wallet account was selected.');
-      setAccount(addresses[0]);
-      setChain(Number(await p.request({ method: 'eth_chainId' })));
-      sessionStorage.removeItem(disconnectedKey);
-    });
-  const switchNetwork = () =>
-    run('Switching network', async () => {
-      const p = provider();
-      if (!p)
-        throw new Error(
-          'Open this page in your Ethereum wallet browser or connect a wallet extension.',
-        );
-      setChain(await switchToSepolia(p, setStatus));
-    });
+  const connect = (area: typeof feedbackArea = 'global') =>
+    run(
+      'Connecting wallet',
+      async () => {
+        const p = provider();
+        if (!p)
+          throw new Error(
+            'Open this page in a wallet browser or install an Ethereum wallet.',
+          );
+        const addresses = await p.request({ method: 'eth_requestAccounts' });
+        if (!addresses[0]) throw new Error('No wallet account was selected.');
+        setAccount(addresses[0]);
+        setChain(Number(await p.request({ method: 'eth_chainId' })));
+        sessionStorage.removeItem(disconnectedKey);
+      },
+      area,
+    );
+  const switchNetwork = (area: typeof feedbackArea = 'global') =>
+    run(
+      'Switching network',
+      async () => {
+        const p = provider();
+        if (!p)
+          throw new Error(
+            'Open this page in your Ethereum wallet browser or connect a wallet extension.',
+          );
+        setChain(await switchToSepolia(p, setStatus));
+      },
+      area,
+    );
   const disconnect = () => {
     setAccount(undefined);
     setOwned([]);
+    setFeedbackArea('global');
+    setError('');
+    if (!pendingHash) {
+      rememberFeedback('global', {});
+      setTransactionStage('idle');
+      setReceiptHash(undefined);
+    }
     sessionStorage.setItem(disconnectedKey, 'yes');
     setStatus(
       'Disconnected from this app. Existing Aqua permissions are unchanged.',
@@ -532,11 +597,11 @@ export function TreasuryConsole({
     event.preventDefault();
     setFieldError('');
     if (!account) {
-      void connect();
+      void connect('create');
       return;
     }
     if (chain !== sepolia.id) {
-      void switchNetwork();
+      void switchNetwork('create');
       return;
     }
     let settings: Settings;
@@ -551,35 +616,39 @@ export function TreasuryConsole({
       allocationRef.current?.focus();
       return;
     }
-    void run('Creating position', async () => {
-      if (!d)
-        throw new Error(
-          'Owner contracts are not configured in this preview yet.',
+    void run(
+      'Creating position',
+      async () => {
+        if (!d)
+          throw new Error(
+            'Owner contracts are not configured in this preview yet.',
+          );
+        const receipt = await transact({
+          address: d.positions,
+          abi: positionsAbi,
+          functionName: 'createDemo',
+          args: [settings],
+        });
+        const logs = parseEventLogs({
+          abi: positionsAbi,
+          logs: receipt.logs,
+          eventName: 'PositionCreated',
+        });
+        const log = logs.find(
+          (l) => l.address.toLowerCase() === d?.positions.toLowerCase(),
         );
-      const receipt = await transact({
-        address: d.positions,
-        abi: positionsAbi,
-        functionName: 'createDemo',
-        args: [settings],
-      });
-      const logs = parseEventLogs({
-        abi: positionsAbi,
-        logs: receipt.logs,
-        eventName: 'PositionCreated',
-      });
-      const log = logs.find(
-        (l) => l.address.toLowerCase() === d?.positions.toLowerCase(),
-      );
-      if (!log)
-        throw new Error(
-          'Creation receipt has no matching position. Inspect the receipt before retrying.',
+        if (!log)
+          throw new Error(
+            'Creation receipt has no matching position. Inspect the receipt before retrying.',
+          );
+        choose(log.args.orderHash);
+        setOwned(await readOwnedPositions(account));
+        setStatus(
+          'Position created. Approve the two allocations, then ship to Aqua.',
         );
-      choose(log.args.orderHash);
-      setOwned(await readOwnedPositions(account));
-      setStatus(
-        'Position created. Approve the two allocations, then ship to Aqua.',
-      );
-    });
+      },
+      'create',
+    );
   };
   const approveAllocation = (assetSide: boolean) =>
     run('Approving Aqua allocation', async () => {
@@ -796,6 +865,9 @@ export function TreasuryConsole({
       );
       if (log)
         setLastTrade({
+          hash: receipt.transactionHash,
+          order: position.hash,
+          account: w.account.address,
           input: log.args.amountIn,
           output: log.args.amountOut,
           assetIn,
@@ -821,6 +893,34 @@ export function TreasuryConsole({
             : 'Stressed'
     : 'Loading';
   const observation = position?.observation.value;
+  const feedbackLocation = feedbackPlacement({
+    area: feedbackArea,
+    showCreate,
+    positionHash: position?.hash,
+    account,
+    context: feedbackContext,
+  });
+  const feedback = (
+    <ActionFeedback
+      busy={busy}
+      status={status}
+      error={error}
+      pending={!!pendingHash}
+      hash={receiptHash}
+      stage={transactionStage}
+      context={
+        feedbackLocation === 'global'
+          ? feedbackContextLabel(feedbackContext)
+          : undefined
+      }
+    />
+  );
+  const actionLabel = actionHeading(
+    transactionStage,
+    busy,
+    !!pendingHash,
+    error,
+  );
   const age = (
     round: readonly [bigint, bigint, bigint, bigint, bigint] | undefined,
   ) => (!round ? 'Unavailable' : observationAge(Number(round[3]), now));
@@ -883,27 +983,7 @@ export function TreasuryConsole({
             </p>
           </div>
         </section>
-        <output className="maker-status">
-          {busy ? `${busy}… ` : ''}
-          {status}
-        </output>
-        {error && (
-          <p className="notice error" role="alert">
-            {error}
-          </p>
-        )}
-        {receiptHash && (
-          <p className="maker-receipt-link">
-            <a
-              href={`https://sepolia.etherscan.io/tx/${receiptHash}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              View latest transaction{' '}
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </a>
-          </p>
-        )}
+        {feedbackLocation === 'global' && feedback}
         {!showCreate && readError && (
           <p className="notice error" role="alert">
             {readError}
@@ -917,19 +997,18 @@ export function TreasuryConsole({
               className="text-action"
               onClick={() =>
                 void run('Checking pending transaction', async () => {
+                  const tracking = activeFeedback.current;
                   const r = await confirmed(pendingHash, (replacement) => {
                     setPendingHash(replacement);
                     setReceiptHash(replacement);
                     localStorage.setItem(
                       pendingKey,
-                      JSON.stringify({
-                        hash: replacement,
-                        chainId: sepolia.id,
-                      }),
+                      JSON.stringify(pendingFeedbackRecord(replacement, sepolia.id, tracking)),
                     );
                   });
                   localStorage.removeItem(pendingKey);
                   setPendingHash(undefined);
+                  setTransactionStage('confirmed');
                   setSettledRevision((v) => v + 1);
                   const created = parseEventLogs({
                     abi: positionsAbi,
@@ -988,6 +1067,9 @@ export function TreasuryConsole({
                 Create position
               </button>
             )}
+            {!showCreate && position && (
+              <PositionShare key={position.hash} hash={position.hash} />
+            )}
             {owned.length > 0 && (
               <label>
                 Your positions
@@ -1037,12 +1119,15 @@ export function TreasuryConsole({
             locked={!!busy || !!pendingHash}
             configured={!!d}
             onCreate={create}
+            feedback={feedbackLocation === 'create' ? feedback : undefined}
             createLabel={
-              !account
-                ? 'Connect wallet'
-                : chain !== sepolia.id
-                  ? 'Switch to Sepolia'
-                  : 'Create this position'
+              busy && feedbackLocation === 'create'
+                ? actionLabel
+                : !account
+                  ? 'Connect wallet'
+                  : chain !== sepolia.id
+                    ? 'Switch to Sepolia'
+                    : 'Create this position'
             }
           />
         ) : (
@@ -1084,19 +1169,21 @@ export function TreasuryConsole({
                       <span className="decision-label">
                         {state} · bUSD / rUSD
                       </span>
-                      <p className="position-owner">
-                        Owner {shortenHex(position.owner)}
-                        {isOwner ? ' · your wallet' : ''}
-                      </p>
                     </div>
                     <button
-                      className="text-action"
+                      className="text-action position-refresh"
+                      aria-label="Refresh position state"
+                      title="Refresh position state"
                       disabled={loading || !!busy}
                       onClick={() => void refresh()}
                     >
-                      Refresh state
+                      <RefreshCw size={18} aria-hidden="true" />
                     </button>
                   </div>
+                  <p className="position-owner">
+                    Owner {shortenHex(position.owner)}
+                    {isOwner ? ' · your wallet' : ''}
+                  </p>
                   <p>
                     {state === 'Healthy'
                       ? 'Two-way trading is open. Each settled trade retains the configured fee.'
@@ -1270,6 +1357,11 @@ export function TreasuryConsole({
                       )}
                       <output
                         id="quote-status"
+                        className={
+                          quote && !quoting && !quoteError
+                            ? 'sr-only'
+                            : 'quote-message'
+                        }
                         aria-live="polite"
                         aria-atomic="true"
                       >
@@ -1287,15 +1379,20 @@ export function TreasuryConsole({
                                 : '')}
                       </output>
                       <dl className="quote-terms">
-                        <div>
+                        <div className="quote-receive">
                           <dt>You receive</dt>
                           <dd>
-                            {tokens(quote?.output)} {assetIn ? 'rUSD' : 'bUSD'}
+                            <span>{tokens(quote?.output)}</span>{' '}
+                            <span className="quote-token">
+                              {assetIn ? 'rUSD' : 'bUSD'}
+                            </span>
                           </dd>
                         </div>
                         <div>
                           <dt>Minimum received</dt>
-                          <dd>{tokens(quote?.minimum)}</dd>
+                          <dd>
+                            {tokens(quote?.minimum)} {assetIn ? 'rUSD' : 'bUSD'}
+                          </dd>
                         </div>
                         <div>
                           <dt>Healthy fee included</dt>
@@ -1318,26 +1415,30 @@ export function TreasuryConsole({
                         }
                         onClick={() =>
                           void (!account
-                            ? connect()
+                            ? connect('position')
                             : chain !== sepolia.id
-                              ? switchNetwork()
+                              ? switchNetwork('position')
                               : trade())
                         }
                       >
-                        {!account
-                          ? 'Connect wallet'
-                          : chain !== sepolia.id
-                            ? 'Switch to Sepolia'
-                            : !currentTradeWallet
-                              ? 'Reading wallet balance…'
-                              : quote &&
-                                  currentTradeWallet.allowance < quote.input
-                                ? `Approve ${tokens(quote.input)} ${
-                                    assetIn ? 'bUSD' : 'rUSD'
-                                  } for trade`
-                                : `Swap ${
-                                    assetIn ? 'bUSD for rUSD' : 'rUSD for bUSD'
-                                  }`}
+                        {busy && feedbackLocation === 'position'
+                          ? actionLabel
+                          : !account
+                            ? 'Connect wallet'
+                            : chain !== sepolia.id
+                              ? 'Switch to Sepolia'
+                              : !currentTradeWallet
+                                ? 'Reading wallet balance…'
+                                : quote &&
+                                    currentTradeWallet.allowance < quote.input
+                                  ? `Approve ${tokens(quote.input)} ${
+                                      assetIn ? 'bUSD' : 'rUSD'
+                                    } for trade`
+                                  : `Swap ${
+                                      assetIn
+                                        ? 'bUSD for rUSD'
+                                        : 'rUSD for bUSD'
+                                    }`}
                       </button>
                       <p className="action-help">
                         If required, first approve this trade amount. Then
@@ -1351,14 +1452,44 @@ export function TreasuryConsole({
                       >
                         Refresh quote
                       </button>
-                      {lastTrade && (
-                        <p className="notice success">
-                          Settled: {tokens(lastTrade.input)}{' '}
-                          {lastTrade.assetIn ? 'bUSD' : 'rUSD'} paid →{' '}
-                          {tokens(lastTrade.output)}{' '}
-                          {lastTrade.assetIn ? 'rUSD' : 'bUSD'} received.
-                        </p>
-                      )}
+                      {lastTrade &&
+                        lastTrade.order === position.hash &&
+                        lastTrade.account.toLowerCase() ===
+                          account?.toLowerCase() && (
+                          <section
+                            className="settled-trade"
+                            aria-label="Latest settled trade"
+                          >
+                            <h3>
+                              <Check size={18} aria-hidden="true" /> Trade
+                              settled
+                            </h3>
+                            <dl>
+                              <div>
+                                <dt>You paid</dt>
+                                <dd>
+                                  {tokens(lastTrade.input)}{' '}
+                                  {lastTrade.assetIn ? 'bUSD' : 'rUSD'}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>You received</dt>
+                                <dd>
+                                  {tokens(lastTrade.output)}{' '}
+                                  {lastTrade.assetIn ? 'rUSD' : 'bUSD'}
+                                </dd>
+                              </div>
+                            </dl>
+                            <a
+                              href={`https://sepolia.etherscan.io/tx/${lastTrade.hash}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              View settlement{' '}
+                              <ArrowUpRight size={16} aria-hidden="true" />
+                            </a>
+                          </section>
+                        )}
                     </>
                   ) : (
                     <>
@@ -1387,6 +1518,7 @@ export function TreasuryConsole({
                       )}
                     </>
                   )}
+                  {feedbackLocation === 'position' && feedback}
                   {isOwner && position.scenario !== zeroAddress && (
                     <section
                       className="maker-section"
@@ -1562,18 +1694,6 @@ export function TreasuryConsole({
                     discount is not a cap on total loss. Testnet sample prices
                     can be refreshed only by this position’s owner.
                   </p>
-                  <label className="maker-share">
-                    Share this position
-                    <input
-                      readOnly
-                      value={
-                        typeof window === 'undefined'
-                          ? ''
-                          : `${window.location.origin}/treasury?position=${position.hash}`
-                      }
-                      onFocus={(e) => e.target.select()}
-                    />
-                  </label>
                   <details className="signing-details">
                     <summary>Position and permissions</summary>
                     <p>
@@ -1616,20 +1736,25 @@ export function TreasuryConsole({
                 key={String(side)}
                 disabled={!ready || !d}
                 onClick={() =>
-                  void run('Claiming sample tokens', async () => {
-                    if (d)
-                      await transact({
-                        address: side ? d.badToken : d.goodToken,
-                        abi: erc20Abi,
-                        functionName: 'claim',
-                      });
-                  })
+                  void run(
+                    'Claiming sample tokens',
+                    async () => {
+                      if (d)
+                        await transact({
+                          address: side ? d.badToken : d.goodToken,
+                          abi: erc20Abi,
+                          functionName: 'claim',
+                        });
+                    },
+                    'faucet',
+                  )
                 }
               >
                 Claim {side ? 'bUSD' : 'rUSD'}
               </button>
             ))}
           </div>
+          {feedbackLocation === 'faucet' && feedback}
           {!account && <p>Connect your wallet to claim.</p>}
         </section>
       </main>

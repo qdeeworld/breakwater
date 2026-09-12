@@ -29,6 +29,17 @@ a claim that the upstream implementation was created by Codex.
 
 ## Human contribution
 
+### September 12 finishing pass
+
+Qdee approved focused quote hierarchy, mobile spacing, transaction feedback,
+position-link copying, rehearsal-copy refinement and a matching social preview.
+Codex implemented and tested those interface changes. Transaction feedback is
+derived from actual wallet/receipt states; local presentation fixtures are not
+claims of new on-chain activity. The updated `web/public/og.png` was generated
+with OpenAI image generation from the approved aperture artwork and resized to
+1200×630; `web/public/og.png.json` records the exact prompt. No contract, approval
+amount, trading arithmetic or observation-health rule changed.
+
 ### September 12 selective-aperture identity
 
 Qdee requested a substantially stronger visual identity, reviewed three image

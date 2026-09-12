@@ -27,10 +27,10 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://breakwater.dolepee.com/og.png',
+        url: 'https://breakwater.dolepee.com/og.png?v=aperture-20260912',
         width: 1200,
         height: 630,
-        alt: 'Breakwater treasury tide gate between impaired and reserve assets',
+        alt: 'Breakwater — Put liquidity to work. Set its limits. Sepolia prototype with no-value test tokens.',
         type: 'image/png',
       },
     ],
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     title: 'Breakwater',
     description:
       'Treasury-owned liquidity with trading fees and explicit risk limits. Try Aqua and SwapVM on Sepolia with no-value test tokens.',
-    images: ['https://breakwater.dolepee.com/og.png'],
+    images: ['https://breakwater.dolepee.com/og.png?v=aperture-20260912'],
   },
 };
 

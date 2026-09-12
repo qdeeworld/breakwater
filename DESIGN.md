@@ -208,6 +208,10 @@ The homepage artwork depicts healthy illustrative permission, not live observati
 
 The selected-position view preserves pay/receive labels, refreshed quotes, minimum received, healthy fee, the actual next action and settled transaction receipts. Existing policy is immutable: changing the settings requires a new position; cancellation of the old position is a separate owner decision. Cancellation removes its allocation and does not imply a custodial withdrawal. Historical fees and exit proceeds remain distinct from remaining inventory, and shared wallet backing is not reserved liquidity.
 
+The trade ticket gives the received amount one prominent display, with minimum received and fees below; a visually hidden live announcement preserves quote feedback without duplicating the figure on screen. Transaction feedback sits with the initiating action, distinguishes wallet review, pending confirmation and verified completion, and retains uncertainty after a failed follow-up read. A settled trade shows exact paid/received amounts and its own receipt. Feedback from another position or wallet returns to the page-level area with its original context.
+
+Position sharing belongs near the main actions: a labelled copy button confirms success, with a manual link disclosure if copying is unavailable. Compact mobile state headings retain a 44px labelled refresh control. The social cover uses the same aperture artwork, product promise and explicit no-value Sepolia qualification.
+
 ## Do's and Don'ts
 
 ### Do:

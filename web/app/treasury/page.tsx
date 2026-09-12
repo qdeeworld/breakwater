@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     url: '/treasury',
     images: [
       {
-        url: 'https://breakwater.dolepee.com/og.png',
+        url: 'https://breakwater.dolepee.com/og.png?v=aperture-20260912',
         width: 1200,
         height: 630,
       },
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     title: 'Your treasury — Breakwater',
     description:
       'Create and manage an Aqua position with explicit trading limits. Sepolia sample tokens only.',
-    images: ['https://breakwater.dolepee.com/og.png'],
+    images: ['https://breakwater.dolepee.com/og.png?v=aperture-20260912'],
   },
 };
 

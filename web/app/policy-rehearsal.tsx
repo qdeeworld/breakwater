@@ -98,8 +98,7 @@ export function PolicyRehearsal({
   return (
     <aside className="rehearsal-panel" aria-labelledby="rehearsal-title">
       <div className="rehearsal-heading">
-        <h2 id="rehearsal-title">Test your policy</h2>
-        <span className="sample-label">Historical rehearsal</span>
+        <h2 id="rehearsal-title">Choose a historical checkpoint</h2>
       </div>
       <p className="rehearsal-lead">
         Independent historical snapshots. Each starts with your allocation—not a
